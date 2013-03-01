@@ -134,7 +134,7 @@ class Triangle
 	private function get_cuisines()
 	{
 		$allWithCuisine = array(
-			'$match' => array( TAGS => new MongoRegex( '/^cuisine=/' ) )
+			'$match' => array( TAGS => new MongoRegex( '/^cuisine=[a-z_-]+$/' ) )
 		);
 		$justTheTags = array(
 			'$project' => array( TAGS => 1 )
