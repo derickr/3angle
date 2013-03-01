@@ -66,11 +66,11 @@ class Triangle
 
 	function getLocation()
 	{
-		if ( !isset( $o['type'] ) )
+		if ( !isset( $this->o[TYPE] ) )
 		{
 			return '';
 		}
-		if ( $this->o['type'] == 2 )
+		if ( $this->o[TYPE] == 2 )
 		{
 			$loc = $this->o[LOC][0];
 		}
