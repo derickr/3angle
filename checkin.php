@@ -22,7 +22,6 @@ td {
 	<link rel="stylesheet" href="leaflet.css" />
 	<!--[if lte IE 8]><link rel="stylesheet" href="leaflet.ie.css" /><![endif]-->
 </head>
-</head>
 <body>
 <h1><?php echo $triangle->title; ?></h1>
 

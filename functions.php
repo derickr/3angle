@@ -185,7 +185,7 @@ class Triangle
 				return $ret;
 
 			case 'freeform':
-				return "<tr><td>$name</td><td><input type='text' name='{$name}' value='{$value}'></input></td></tr>\n";
+				return "<tr><td>$name</td><td><input type='text' name='{$name}' value='{$value}'></td></tr>\n";
 
 			case 'listCuisine':
 				$ret = "<tr><td>$name</td><td><select name='{$name}'>";
@@ -204,14 +204,14 @@ class Triangle
 	function show_data()
 	{
 		$ret = '';
-		$ret .= "<input type='hidden' name='action' value='checkin'></input>\n";
-		$ret .= "<input type='hidden' name='object' value='{$this->o['_id']}'></input>\n";
+		$ret .= "<input type='hidden' name='action' value='checkin'>\n";
+		$ret .= "<input type='hidden' name='object' value='{$this->o['_id']}'>\n";
 		$ret .= '<table>';
 		foreach ( $this->fields as $name => $value )
 		{
 			$ret .= $this->create_widget( $value[1], $name, $value );
 		}
-		$ret .= "<tr><td colspan='2'><input type='submit' name='checkin' value='check in'></input></td></tr>\n";
+		$ret .= "<tr><td colspan='2'><input type='submit' name='checkin' value='check in'></td></tr>\n";
 		$ret .= '</table>';
 		return $ret;
 	}
