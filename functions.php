@@ -70,13 +70,17 @@ class Triangle
 		{
 			return '';
 		}
-		if ( $this->o[TYPE] == 2 )
+		if ( $this->o[LOC]['type'] == 'Polygon' )
 		{
-			$loc = $this->o[LOC][0];
+			$loc = $this->o[LOC]['coordinates'][0][0];
+		}
+		else if ( $this->o[LOC]['type'] == 'LineString' )
+		{
+			$loc = $this->o[LOC]['coordinates'][0];
 		}
 		else
 		{
-			$loc = $this->o[LOC];
+			$loc = $this->o[LOC]['coordinates'];
 		}
 
 		return "lat={$loc[1]}&lon={$loc[0]}";

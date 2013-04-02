@@ -1,5 +1,6 @@
 <?php
 include 'config.php';
+include 'classes.php';
 
 /* The file to parse will be on the command line */
 $file = $argv[1];
@@ -8,7 +9,7 @@ $file = $argv[1];
 $m = new MongoClient( 'mongodb://localhost:27017' );
 $collection = $m->selectCollection( DATABASE, COLLECTION );
 $collection->drop();
-$collection->ensureIndex( array( LOC => '2d' ) );
+$collection->ensureIndex( array( LOC => '2dsphere' ) );
 $collection->ensureIndex( array( TAGS => 1 ) );
 
 /* Parse the nodes */
@@ -28,7 +29,8 @@ while ($z->name === 'node') {
 	/* Add type, _id and loc elements here */
 	$q[TYPE] = 1;
 	$q['_id'] = "n" . (string) $node['id'];
-	$q[LOC] = array( (float) $node['lon'], (float) $node['lat'] );
+	$geo = new GeoJSONPoint( $node['lon'], $node['lat'] );
+	$q[LOC] = $geo->getGeoJSON();
 	/* Check the parseNode implementation */
 	parseNode($q, $node);
 
@@ -88,14 +90,22 @@ function fetchLocations($collection, &$q, $node)
 	}
 	$r = $collection->find( array( '_id' => array( '$in' => $nodeIds ) ) );
 	foreach ( $r as $n ) {
-		$tmp[$n["_id"]] = $n[LOC];
+		$tmp[$n["_id"]] = GeoJSONPoint::fromGeoJson( $n[LOC] )->p;
 	}
 	foreach ( $nodeIds as $id ) {
 		if (isset($tmp[$id])) {
 			$locations[] = $tmp[$id];
 		}
 	}
-	$q[LOC] = $locations;
+	if ( $nodeIds[0] == $nodeIds[sizeof( $nodeIds ) - 1] )
+	{
+		$geo = new GeoJSONPolygon( $locations );
+	}
+	else
+	{
+		$geo = new GeoJSONLineString( $locations );
+	}
+	$q[LOC] = $geo->getGeoJSON();
 }
 
 function parseNode(&$q, $sxml)

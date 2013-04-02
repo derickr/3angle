@@ -1,9 +1,12 @@
 <?php
 include 'config.php';
+include 'classes.php';
 
 header('Content-type: text/plain');
 $m = new MongoClient( 'mongodb://localhost' );
 $d = $m->selectDb( DATABASE );
+$c = $d->selectCollection( COLLECTION );
+$center = new GeoJSONPoint( (float) $_GET['lon'], (float) $_GET['lat'] );
 
 $rets = array();
 
@@ -17,26 +20,31 @@ $query = array(
 	)
 );
 
-/* End */
+/* CLOSESTS with DISTANCE (aggregation) */
 
-/* This runs the geo search */
-$s = $d->command(
-	array(
-		'geoNear' => COLLECTION,
+//db.poiConcat.aggregate( { $geoNear: { near: [ -0.153191, 51.53419911 ],
+//		distanceField : 'distance', distanceMultiplier: 6371, maxDistance:
+//		5000, spherical: true, num: 10, query: { ts: 'amenity=pub' } } } );
+$res = $c->aggregate( array(
+	'$geoNear' => array(
+		'near' => $center->p,
+		'distanceField' => 'distance',
+		'distanceMultiplier' => 6371000,
+		'maxDistance' => 500 / 6371000,
 		'spherical' => true,
-		'near' => array(
-			(float) $_GET['lon'],
-			(float) $_GET['lat']
-		),
-		'num' => 250,
-		'maxDistance' => $wantedD / 6371.01,
-		'query' => $query,
+		'query' => array( '$or' => array( array( TAGS => 'amenity=pub' ), array( TAGS => 'amenity=bar' ) ) ),
 	)
-);
+) );
 
+$s = $res['result'];
+
+/*
 foreach( $s['results'] as $res)
 {
 	$o = $res['obj'];
+*/
+foreach( $s as $o )
+{
 	$ret = array(
 		'type' => 'Feature',
 		'properties' => array( 'popupContent' => '', 'changed' => false ),
@@ -56,27 +64,12 @@ foreach( $s['results'] as $res)
 			}
 		}
 		$content .= "<br/><form action='checkin.php' method='post'><input type='hidden' name='object' value='{$o['_id']}'/><input type='submit' value='check in'/></form>";
+		$ret['properties']['name'] = $name . "<br/>\n(". sprintf('%d m', $o['distance']) . ')';
 		$ret['properties']['popupContent'] = "<b>{$name}</b>" . $content;
 	}
-	if ($o[TYPE] == 1) {
-		$ret['geometry'] = array(
-			'type' => "Point",
-			'coordinates' => $o[LOC]
-		);
-	}
-	if ($o[TYPE] == 2) {
-		if ($o[LOC][0] == $o[LOC][count($o[LOC]) - 1]) {
-			$ret['geometry'] = array(
-				'type' => "Polygon",
-				'coordinates' => array($o[LOC]),
-			);
-		} else {
-			$ret['geometry'] = array(
-				'type' => "LineString",
-				'coordinates' => $o[LOC],
-			);
-		}
-	}
+
+	$ret['geometry'] = $o[LOC];
+
 	$rets[] = $ret;
 }
 echo json_encode( $rets, JSON_PRETTY_PRINT );
