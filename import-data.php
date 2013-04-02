@@ -126,5 +126,8 @@ function parseNode(&$q, $sxml)
 		}
 	}
 
-	$q[TAGS] = $tagsCombined;
+	if ( sizeof( $tagsCombined ) > 0 )
+	{
+		$q[TAGS] = $tagsCombined;
+	}
 }
