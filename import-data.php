@@ -69,8 +69,14 @@ while ($z->name === 'way') {
 	fetchLocations($collection, $q, $way);
 	parseNode($q, $way);
 
-	/* #4: Write the insert command here */
-	$collection->insert( $q );
+	try
+	{
+		$collection->insert( $q );
+	}
+	catch ( MongoCursorException $e )
+	{
+		echo "\n", $q['_id'], ': ', $e->getMessage(), "\n";
+	}
 
 	$z->next('way');
 	if (++$count % 100 === 0) {

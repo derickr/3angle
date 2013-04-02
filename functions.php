@@ -36,6 +36,7 @@ class Triangle
 		$this->m = new MongoClient( 'mongodb://localhost' );
 		$this->d = $this->m->selectDb( DATABASE );
 		$this->c = $this->d->selectCollection( COLLECTION );
+		$this->sc = $this->d->selectCollection( 'suggestions' );
 
 		/* Find object */
 		$object = isset( $_POST['object'] ) ? $_POST['object'] : $_GET['object'];
@@ -182,7 +183,7 @@ class Triangle
 
 			case 'boolean':
 				$ret = "<tr><td>$name</td><td><select name='{$name}'>";
-				$ret .= "<option value='?'>«unknown»</option>\n";
+				$ret .= "<option value=''>«unknown»</option>\n";
 				$ret .= "<option value='1'>yes</option>\n";
 				$ret .= "<option value='0'>no</option>\n";
 				$ret .= "</select></td></tr>\n";
@@ -228,12 +229,51 @@ class Triangle
 		unset( $values['object'] );
 		unset( $values['checkin'] );
 
-		/* #3: Write the code that stores the changed fields */
 		foreach( $values as $key => $value )
 		{
-			/* #3a: Record changes */
+			if ( $value === '' )
+			{
+				continue;
+			}
+			if ( isset( $this->tags[$key] ) )
+			{
+				if ( $this->tags[$key] == $value )
+				{
+					echo "Value for $key is the same: $value<br/>\n";
+				}
+				else
+				{
+					echo "Value for $key is changed from {$this->tags[$key]} to {$value}<br/>\n";
+					$this->doSuggestion( $this->o['_id'], $key, $value );
+				}
+			}
+			else
+			{
+				echo "Key $key is new with value {$value}<br/>\n";
+				$this->doSuggestion( $this->o['_id'], $key, $value );
+			}
 		}
-		/* #3b: Store the changes */
+	}
+
+	function doSuggestion( $id, $key, $value )
+	{
+		var_dump ($id, $key, $value );
+		// first we check if there is an entry already
+		if ( $this->sc->findOne( array( 'id' => $id, 'key' => $key, 'value' => $value ) ) === null )
+		{
+			// we need to add something
+			$this->sc->insert(
+				array( 'id' => $id, 'key' => $key, 'value' => $value, 'suggester' => time() )
+			);
+		}
+		else
+		{
+			// if so, we just push the new USER id (timestamp in our case)
+			$this->sc->update(
+				array( 'id' => $id, 'key' => $key, 'value' => $value ),
+				array( '$addToSet' => array( 'approver' => time() ) )
+			);
+		}
 	}
 }
 ?>
