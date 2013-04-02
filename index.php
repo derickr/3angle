@@ -33,6 +33,22 @@ html, body, #map {
 	border: 1px solid black;
 	padding: 4px;
 }
+div.pointName, div.polygonName {
+	text-align: center;
+	font-weight: bold;
+	line-height: 1;
+	margin-top: 1em;
+}
+div.polygonNam {
+	text-align: center;
+	vertical-align: middle;
+	font-weight: bold;
+	line-height: 1;
+	opacity: 0.5;
+	font-size: 4em;
+	width: 100%;
+	font-family: serif;
+}
     </style>
 
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -52,21 +68,13 @@ html, body, #map {
 
 		var OpenStreetMapUrl = 'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
 			OpenStreetMapAttribution = 'Map data &copy; 2011 OpenStreetMap contributors',
-			OpenStreetMap = new L.TileLayer(OpenStreetMapUrl, {maxZoom: 18, attribution: OpenStreetMapAttribution});
+			OpenStreetMap = new L.TileLayer(OpenStreetMapUrl, {maxZoom: 18, attribution: OpenStreetMapAttribution, opacity: 0.7});
 
 		map.setView(new L.LatLng(<?php echo $lat; ?>, <?php echo $lon; ?>), 17).addLayer(OpenStreetMap);
 
 		var geojsonMarkerOptions = {
 			radius: 12,
 			fillColor: "#8888ff",
-			color: "#33f",
-			weight: 1,
-			opacity: 1,
-			fillOpacity: 0.6
-		};
-		var geojsonMarkerOptionsC = {
-			radius: 12,
-			fillColor: "#ff0000",
 			color: "#33f",
 			weight: 1,
 			opacity: 1,
@@ -112,6 +120,22 @@ html, body, #map {
 			return Math.min(12, Math.max(2, 15 - ((15-z) * 3)));
 		}
 
+		function calcCentre(coordinates) {
+			var latN  = -90;
+			var latS  = 90;
+			var lonE  = -180;
+			var lonW  = 180;
+
+			coordinates.forEach( function (value) {
+				latN = Math.max(latN, value[1]);
+				latS = Math.min(latS, value[1]);
+				lonE = Math.max(lonE, value[0]);
+				lonW = Math.min(lonW, value[0]);
+			} );
+
+			return [(latN + latS) / 2, (lonE + lonW) / 2];
+		}
+
 		function changeLocation(event) {
 			center = map.getCenter();
 
@@ -124,13 +148,29 @@ html, body, #map {
 				geojsonLayer.clearLayers();
 				res = jQuery.parseJSON(data);
 				res.forEach( function(value) {
-					if (map.getZoom() < 16 && value.geometry.type == 'Polygon') {
+					if (map.getZoom() < 14 && value.geometry.type == 'Polygon') {
 						value.geometry.type = 'Point';
-						value.geometry.coordinates = value.geometry.coordinates[0][0];
+						value.geometry.coordinates = calcCentre( value.geometry.coordinates[0] );
 					}
-					geojsonLayer.addGeoJSON(value);
-				
+					geojsonLayer.addData(value);
+
+					point = null;
+					if (value.geometry.type == 'Point') {
+						var myIcon = L.divIcon({html: value.properties.name, iconSize: 64, className: 'pointName'});
+						point = [ value.geometry.coordinates[1], value.geometry.coordinates[0] ];
+					} else if (value.geometry.type == 'Polygon') {
+						var myIcon = L.divIcon({html: value.properties.name, iconSize: 640, className: 'polygonName'});
+						point = calcCentre( value.geometry.coordinates[0] );
+						//point = [ value.geometry.coordinates[0][0][1], value.geometry.coordinates[0][0][0] ];
+					}
+					if (point) {
+						L.marker(point, {icon: myIcon}).addTo(geojsonLayer);
+						if (false) {
+							L.polyline([center, point], {color: 'red'}).addTo(geojsonLayer);
+						}
+					}
 				} );
+				geojsonLayer.addLayer(new L.CircleMarker(center, { color: '#f00', radius: 5, fillOpacity: 1 } ) );
 			});
 		}
 	</script>

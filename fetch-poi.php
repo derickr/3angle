@@ -10,6 +10,7 @@ $center = new GeoJSONPoint( (float) $_GET['lon'], (float) $_GET['lat'] );
 
 $rets = array();
 
+/*
 $query = array(
 	TAGS => array(
 		'$in' => array(
@@ -19,6 +20,47 @@ $query = array(
 		)
 	)
 );
+$query = array( TAGS => 'amenity=pub' );
+*/
+/* Everything *
+$query = array(
+	LOC => array(
+		'$near' => array(
+			'$geometry' => $center->getGeoJSON(),
+			'$maxDistance' => 500
+		),
+	),
+	TAGS => array( '$exists' => true ),
+);
+$s = $c->find( $query )->limit( 400 );
+*/
+
+/* FIVE CLOSEST PUBS *
+$query = array(
+	LOC => array(
+		'$near' => array(
+			'$geometry' => $center->getGeoJSON(),
+			'$maxDistance' => 500
+		),
+	),
+	TAGS => 'amenity=pub',
+);
+$s = $c->find( $query )->limit( 50 );
+/*/
+
+/* HYDEPARK and CAFES *
+$query = array( '_id' => array( '$in' => array( "n1696895511", "n1696895509", "n130210673", "n1696895513", "w157472706", "w19851241" ) ) );
+$s = $c->find( $query )->limit( 10 );
+*/
+
+/* BUILDING and INTERSECTS *
+$building = $c->findOne( array( '_id' => "w4376720" ) );
+$query = array( 
+	LOC => array( '$geoIntersects' => array( '$geometry' => $building['l'] ) ),
+	TAGS => array( '$exists' => true ),
+);
+$s = $c->find( $query )->sort( array( 'l.type' => -1 ) );
+/*/
 
 /* CLOSESTS with DISTANCE (aggregation) */
 
