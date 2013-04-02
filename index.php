@@ -116,7 +116,7 @@ html, body, #map {
 			center = map.getCenter();
 
 			$.ajax({
-			  url: "fetch-poi.php" + '?lat=' + center.lat + '&lon=' + center.lng + '&d=1',
+			  url: "fetch-poi.php" + '?lat=' + center.lat + '&lon=' + center.lng,
 			  beforeSend: function ( xhr ) {
 				xhr.overrideMimeType("text/plain; charset=x-user-defined");
 			  }

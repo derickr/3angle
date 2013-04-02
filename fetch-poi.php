@@ -5,7 +5,7 @@ header('Content-type: text/plain');
 $m = new MongoClient( 'mongodb://localhost' );
 $d = $m->selectDb( DATABASE );
 
-$wantedD = isset($_GET['d']) ? $_GET['d']: 1;
+$rets = array();
 
 $query = array(
 	TAGS => array(
