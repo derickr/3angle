@@ -44,7 +44,7 @@ html, body, #map {
 <body onLoad="changeLocation(false);">
 	<div id="map"></div>
 
-	<script src="leaflet.js"></script>
+	<script type="text/javascript" src="leaflet.js"></script>
 	<script type="text/javascript" src="jquery-1.7.2.min.js"></script>
 
 	<script>
@@ -90,33 +90,18 @@ html, body, #map {
 		};
 
 		var geoJsonOptions = {
-			pointToLayer: function (latlng) {
+			pointToLayer: function (featureData,latlng) {
 				myOptions = geojsonMarkerOptions;
 				myOptions.radius = calcCircleSize();
 				return new L.CircleMarker(latlng, myOptions);
+			},
+			onEachFeature: function (feature, layer) {
+				layer.bindPopup(feature.properties.popupContent);
 			}
 		}
 
 		var geojsonLayer = new L.GeoJSON(null, geoJsonOptions);
 		map.addLayer(geojsonLayer);
-		geojsonLayer.on("featureparse", function (e) {
-			if (e.properties && e.properties.popupContent){
-				e.layer.bindPopup(e.properties.popupContent);
-			}
-			if (e.properties && e.properties.style && e.layer.setStyle) {
-				e.layer.setStyle(e.properties.style);
-			} else if (e.geometryType == 'Polygon' && map.getZoom() >= 16) {
-				e.layer.setStyle(geojsonAreaOptions);
-			} else if (e.geometryType == 'LineString') {
-				e.layer.setStyle(geojsonLineOptions);
-			} else {
-				if (e.properties.changed) {
-					e.layer.setStyle(geojsonMarkerOptionsC);
-				} else {
-					e.layer.setStyle(geojsonMarkerOptions);
-				}
-			}
-		});
 
 		map.on('moveend', changeLocation);
 
