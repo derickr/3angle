@@ -9,82 +9,145 @@ $c = $d->selectCollection( COLLECTION );
 $center = new GeoJSONPoint( (float) $_GET['lon'], (float) $_GET['lat'] );
 
 $rets = array();
+$q = false;
 
-/*
-$query = array(
-	TAGS => array(
-		'$in' => array(
-			new MongoRegex( "/^amenity=/" ),
-			new MongoRegex( "/^shop=/" ),
-			new MongoRegex( "/^tourism=/" ),
-		)
-	)
-);
-$query = array( TAGS => 'amenity=pub' );
-*/
-/* Everything *
-$query = array(
-	LOC => array(
-		'$near' => array(
-			'$geometry' => $center->getGeoJSON(),
-			'$maxDistance' => 500
-		),
-	),
-	TAGS => array( '$exists' => true ),
-);
-$s = $c->find( $query )->limit( 400 );
-*/
-
-/* FIVE CLOSEST PUBS *
-$query = array(
-	LOC => array(
-		'$near' => array(
-			'$geometry' => $center->getGeoJSON(),
-			'$maxDistance' => 500
-		),
-	),
-	TAGS => 'amenity=pub',
-);
-$s = $c->find( $query )->limit( 50 );
-/*/
-
-/* HYDEPARK and CAFES *
-$query = array( '_id' => array( '$in' => array( "n1696895511", "n1696895509", "n130210673", "n1696895513", "w157472706", "w19851241" ) ) );
-$s = $c->find( $query )->limit( 10 );
-*/
-
-/* BUILDING and INTERSECTS *
-$building = $c->findOne( array( '_id' => "w4376720" ) );
-$query = array( 
-	LOC => array( '$geoIntersects' => array( '$geometry' => $building['l'] ) ),
-	TAGS => array( '$exists' => true ),
-);
-$s = $c->find( $query )->sort( array( 'l.type' => -1 ) );
-/*/
-
-/* CLOSESTS with DISTANCE (aggregation) */
-
-//db.poiConcat.aggregate( { $geoNear: { near: [ -0.153191, 51.53419911 ],
-//		distanceField : 'distance', distanceMultiplier: 6371, maxDistance:
-//		5000, spherical: true, num: 10, query: { ts: 'amenity=pub' } } } );
-$res = $c->aggregate( array(
-	'$geoNear' => array(
-		'near' => $center->p,
-		'distanceField' => 'distance',
-		'distanceMultiplier' => 6371000,
-		'maxDistance' => 500 / 6371000,
-		'spherical' => true,
-		'query' => array( '$or' => array( array( TAGS => 'amenity=pub' ), array( TAGS => 'amenity=bar' ) ) ),
-	)
-) );
-
-$s = $res['result'];
-
-/*
-foreach( $s['results'] as $res)
+if ( isset( $_GET['q'] ) )
 {
-	$o = $res['obj'];
-*/
+	$q = preg_replace( '/[^a-z]/', '', $_GET['q'] );
+}
+
+switch ( $q )
+{
+	case 'everything':
+		$query = array(
+			LOC => array(
+				'$near' => array(
+					'$geometry' => $center->getGeoJSON(),
+					'$maxDistance' => 500
+				),
+			),
+			TAGS => array( '$exists' => true ),
+		);
+		$s = $c->find( $query )->limit( 400 );
+		break;
+
+	case '5pubs': /* FIVE CLOSEST PUBS */
+		$query = array(
+			LOC => array(
+				'$near' => array(
+					'$geometry' => $center->getGeoJSON(),
+					'$maxDistance' => 500
+				),
+			),
+			TAGS => 'amenity=pub',
+		);
+		$s = $c->find( $query )->limit( 50 );
+		break;
+
+	case 'hydepark': /* HYDEPARK and CAFES */
+		$query = array( '_id' => array( '$in' => array( "n1696895511", "n1696895509", "n130210673", "n1696895513", "w157472706", "w19851241" ) ) );
+		$s = $c->find( $query )->limit( 10 );
+		break;
+
+	case 'buildintersect': /* BUILDING and INTERSECTS */
+		$building = $c->findOne( array( '_id' => "w4376720" ) );
+		$query = array( 
+			LOC => array( '$geoIntersects' => array( '$geometry' => $building['l'] ) ),
+			TAGS => array( '$exists' => true ),
+		);
+		$s = $c->find( $query )->sort( array( 'l.type' => -1 ) );
+		break;
+
+
+	case 'aggr': /* CLOSESTS with DISTANCE (aggregation) */
+		//db.poiConcat.aggregate( { $geoNear: { near: [ -0.153191, 51.53419911 ],
+		//		distanceField : 'distance', distanceMultiplier: 6371, maxDistance:
+		//		5000, spherical: true, num: 10, query: { ts: 'amenity=pub' } } } );
+		$res = $c->aggregate( array(
+			'$geoNear' => array(
+				'near' => $center->p,
+				'distanceField' => 'distance',
+				'distanceMultiplier' => 6371000,
+				'maxDistance' => 500 / 6371000,
+				'spherical' => true,
+				'query' => array( '$or' => array(
+#			array( TAGS => 'amenity=pub' ),
+#			array( TAGS => 'amenity=bar' )
+					array( TAGS => 'amenity=restaurant' )
+				) ),
+			)
+		) );
+		$s = $res['result'];
+		break;
+
+	case 'withinbox': /* WITHIN box: */
+		$query = array(
+			LOC => array(
+				'$within' => array(
+					'$geometry' => array(
+						'type' => 'Polygon',
+						'coordinates' => array( array(
+							array( -0.153191, 51.534199 ),
+							array( -0.134630, 51.534199 ),
+							array( -0.134630, 51.543759 ),
+							array( -0.153191, 51.543759 ),
+							array( -0.153191, 51.534199 )
+						))
+					)
+				),
+			),
+			TAGS => 'amenity=pub',
+		);
+		$s = $c->find( $query );
+		break;
+
+	case 'timezone': /* TIMEZONE */
+		$query = array(
+			LOC => array(
+				'$geoIntersects' => array(
+					'$geometry' => $center->p,
+				),
+			),
+		);
+		// this finds the first TZID
+		$s = $c->findOne( $query );
+
+		$tag = false;
+
+		if ( isset( $s[TAGS] ) )
+		{
+			$tag = $s[TAGS][0];
+		}
+
+		if ( $tag )
+		{
+			$query = array(
+				TAGS => $tag
+			);
+			$s = $c->find( $query );
+		}
+		else
+		{
+			$s = array();
+		}
+		break;
+
+	default:
+	case 'amenity':
+		$query = array(
+			TAGS => array(
+				'$in' => array(
+					new MongoRegex( "/^amenity=/" ),
+					new MongoRegex( "/^shop=/" ),
+					new MongoRegex( "/^tourism=/" ),
+				)
+			)
+		);
+		$s = $c->find( $query )->limit( 400 );
+		break;
+
+}
+
 foreach( $s as $o )
 {
 	$ret = array(
