@@ -89,6 +89,55 @@ while ($z->name === 'way') {
 }
 echo "\n";
 
+/* Parse the relations */
+$z = new XMLReader();
+$z->open( $argv[1]);
+while ($z->read() && $z->name !== 'relation' );
+$count = 0;
+$collection->remove( array( TYPE => 3 ) );
+
+echo "Importing relations:\n";
+while ($z->name === 'relation') {
+	$dom = new DomDocument;
+	$relation = simplexml_import_dom($dom->importNode($z->expand(), true));
+
+	/* #3: Create the document structure */
+	$q = array();
+	/* Add type and _id elements here */
+	$q['_id'] = "r" . (string) $relation['id'];
+	$q[TYPE] = 3;
+	/* Check the fetchLocations() and parseNode() implementations */
+	parseNode($q, $relation);
+	if ( !fetchMembers($collection, $q, $relation, $idsToDelete ) )
+	{
+		goto nextrel;
+	}
+
+	try
+	{
+		$collection->insert( $q );
+		foreach ( $idsToDelete as $idToDelete )
+		{
+			$collection->remove( array( '_id' => $idToDelete ) );
+		}
+	}
+	catch ( MongoCursorException $e )
+	{
+		echo "\n", $q['_id'], ': ', $e->getMessage(), "\n";
+		var_dump( $q );
+	}
+
+nextrel:
+	$z->next('relation');
+	if (++$count % 100 === 0) {
+		echo ".";
+	}
+	if ($count % 10000 === 0) {
+		echo "\n", $count, "\n";
+	}
+}
+echo "\n";
+
 function fetchLocations($collection, &$q, $node)
 {
 	$tmp = $locations = $nodeIds = array();
@@ -116,6 +165,52 @@ function fetchLocations($collection, &$q, $node)
 		$geo = new GeoJSONLineString( $locations );
 	}
 	$q[LOC] = $geo->getGeoJSON();
+}
+
+function fetchMembers($collection, &$q, $node, &$idsToDelete)
+{
+	$tmp = $outerIds = $innerIds = $rings = array();
+	$currentLoc = null;
+
+	foreach ( $node->member as $member )
+	{
+		if ( $member['type'] != "way" )
+		{
+			/* Right now, we'll only handle way members */
+			return false;
+		}
+		switch ( $member['role'] )
+		{
+			case 'outer':
+				$outerIds[] = 'w' . (int) $member['ref'];
+				break;
+			case 'inner':
+				$innerIds[] = 'w' . (int) $member['ref'];
+				break;
+			default:
+				/* If it's not inner or other we don't do anything with it yet */
+				return false;
+		}
+	}
+
+	$r = $collection->find( array( '_id' => array( '$in' => $outerIds ) ) );
+	foreach ( $r as $n )
+	{
+		$rings[] = GeoJSONPolygon::fromGeoJson( $n[LOC] )->pg[0];
+	}
+
+	$r = $collection->find( array( '_id' => array( '$in' => $innerIds ) ) );
+	foreach ( $r as $n )
+	{
+		$rings[] = GeoJSONPolygon::fromGeoJson( $n[LOC] )->pg[0];
+	}
+
+	$geo = new GeoJSONPolygon( $rings );
+
+	$q[LOC] = $geo->getGeoJSON();
+
+	$idsToDelete = array_merge( $outerIds, $innerIds );
+	return true;
 }
 
 function parseNode(&$q, $sxml)
