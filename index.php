@@ -141,7 +141,7 @@ div.leisurepark {
 			center = map.getCenter();
 
 			$.ajax({
-			  url: "fetch-poi.php" + '?lat=' + center.lat + '&lon=' + center.lng,
+			  url: "fetch-poi.php" + '?lat=' + center.lat + '&lon=' + center.lng <?php if (isset($_GET['q'])) { echo " + '&q={$_GET['q']}'"; } ?>,
 			  beforeSend: function ( xhr ) {
 				xhr.overrideMimeType("text/plain; charset=x-user-defined");
 			  }
