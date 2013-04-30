@@ -149,10 +149,6 @@ div.leisurepark {
 				geojsonLayer.clearLayers();
 				res = jQuery.parseJSON(data);
 				res.forEach( function(value) {
-					if (map.getZoom() < 14 && value.geometry.type == 'Polygon') {
-						value.geometry.type = 'Point';
-						value.geometry.coordinates = calcCentre( value.geometry.coordinates[0] );
-					}
 					geojsonLayer.addData(value);
 
 					point = null;
