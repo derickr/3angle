@@ -33,21 +33,22 @@ html, body, #map {
 	border: 1px solid black;
 	padding: 4px;
 }
-div.pointName, div.polygonName {
+div.markerName {
 	text-align: center;
 	font-weight: bold;
 	line-height: 1;
 	margin-top: 1em;
 }
-div.polygonNam {
+div.leisurepark {
 	text-align: center;
 	vertical-align: middle;
 	font-weight: bold;
 	line-height: 1;
 	opacity: 0.5;
 	font-size: 4em;
-	width: 100%;
+	width: 900px;
 	font-family: serif;
+	margin-top: -0.5em;
 }
     </style>
 
@@ -155,13 +156,16 @@ div.polygonNam {
 					geojsonLayer.addData(value);
 
 					point = null;
+					classNamePrefix = '';
+					if (value.properties.classes) {
+						classNamePrefix = value.properties.classes + ' ';
+					}
 					if (value.geometry.type == 'Point') {
-						var myIcon = L.divIcon({html: value.properties.name, iconSize: 64, className: 'pointName'});
+						var myIcon = L.divIcon({html: value.properties.name, iconSize: 100, className: classNamePrefix + 'markerName'});
 						point = [ value.geometry.coordinates[1], value.geometry.coordinates[0] ];
 					} else if (value.geometry.type == 'Polygon') {
-						var myIcon = L.divIcon({html: value.properties.name, iconSize: 640, className: 'polygonName'});
+						var myIcon = L.divIcon({html: value.properties.name, iconSize: 640, className: classNamePrefix + 'markerName'});
 						point = calcCentre( value.geometry.coordinates[0] );
-						//point = [ value.geometry.coordinates[0][0][1], value.geometry.coordinates[0][0][0] ];
 					}
 					if (point) {
 						L.marker(point, {icon: myIcon}).addTo(geojsonLayer);

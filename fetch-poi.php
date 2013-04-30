@@ -97,6 +97,7 @@ foreach( $s as $o )
 	}
 	if ( isset( $o[TAGS] ) ) {
 		$name = $content = '';
+		$classes = array();
 		foreach ( $o[TAGS] as $tagName => $value ) {
 			list( $tagName, $value ) = explode( '=', $value );
 			if ( $tagName == 'name' ) {
@@ -104,9 +105,18 @@ foreach( $s as $o )
 			} else {
 				$content .= "<br/>{$tagName}: {$value}\n";
 			}
+			if ( in_array( $tagName, array( 'amenity', 'leisure' ) ) )
+			{
+				$classes[] = preg_replace( '/[^a-z0-9]/', '', $tagName . $value );
+			}
 		}
 		$content .= "<br/><form action='checkin.php' method='post'><input type='hidden' name='object' value='{$o['_id']}'/><input type='submit' value='check in'/></form>";
-		$ret['properties']['name'] = $name . "<br/>\n(". sprintf('%d m', $o['distance']) . ')';
+		$ret['properties']['name'] = $name;
+		if ( isset( $o['distance'] ) )
+		{
+			$ret['properties']['name'] .= "<br/>\n(". sprintf('%d m', $o['distance']) . ')';
+		}
+		$ret['properties']['classes'] = join( ' ', $classes );
 		$ret['properties']['popupContent'] = "<b>{$name}</b>" . $content;
 	}
 
