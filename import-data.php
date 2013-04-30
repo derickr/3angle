@@ -105,7 +105,8 @@ function fetchLocations($collection, &$q, $node)
 	}
 	if ( $nodeIds[0] == $nodeIds[sizeof( $nodeIds ) - 1] )
 	{
-		$geo = new GeoJSONPolygon( $locations );
+		/* Extra array encapsulation to support outer/inner rings */
+		$geo = new GeoJSONPolygon( array( $locations ) );
 	}
 	else
 	{
