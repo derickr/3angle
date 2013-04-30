@@ -8,7 +8,8 @@ $file = $argv[1];
 /* Connect, empty the collection and create indexes */
 $m = new MongoClient( 'mongodb://localhost:27017' );
 $collection = $m->selectCollection( DATABASE, COLLECTION );
-$collection->drop();
+//$collection->drop();
+$collection->ensureIndex( array( TYPE => 1 ) );
 $collection->ensureIndex( array( LOC => '2dsphere' ) );
 $collection->ensureIndex( array( TAGS => 1 ) );
 
@@ -17,7 +18,7 @@ $z = new XMLReader();
 $z->open( $argv[1]);
 while ($z->read() && $z->name !== 'node' );
 $count = 0;
-$collection->remove( array( 'type' => 1 ) );
+$collection->remove( array( TYPE => 1 ) );
 
 echo "Importing nodes:\n";
 while ($z->name === 'node') {
@@ -53,7 +54,7 @@ $z = new XMLReader();
 $z->open( $argv[1]);
 while ($z->read() && $z->name !== 'way' );
 $count = 0;
-$collection->remove( array( 'type' => 2 ) );
+$collection->remove( array( TYPE => 2 ) );
 
 echo "Importing ways:\n";
 while ($z->name === 'way') {
@@ -91,6 +92,8 @@ echo "\n";
 function fetchLocations($collection, &$q, $node)
 {
 	$tmp = $locations = $nodeIds = array();
+	$currentLoc = null;
+
 	foreach ($node->nd as $nd) {
 		$nodeIds[] = 'n' . (int) $nd['ref'];
 	}
