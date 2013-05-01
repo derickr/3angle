@@ -31,7 +31,7 @@ switch ( $q )
 		$s = $c->find( $query )->limit( 400 );
 		break;
 
-	case '5pubs': /* FIVE CLOSEST PUBS */
+	case 'pubs': /* FIVE CLOSEST PUBS */
 		$query = array(
 			LOC => array(
 				'$near' => array(
@@ -41,7 +41,7 @@ switch ( $q )
 			),
 			TAGS => 'amenity=pub',
 		);
-		$s = $c->find( $query )->limit( 50 );
+		$s = $c->find( $query )->limit( 5 );
 		break;
 
 	case 'hydepark': /* HYDEPARK and CAFES */
