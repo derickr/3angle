@@ -18,7 +18,7 @@ $z = new XMLReader();
 $z->open( $argv[1]);
 while ($z->read() && $z->name !== 'node' );
 $count = 0;
-$collection->remove( array( TYPE => 1 ) );
+$collection->remove( array( TYPE => 1 ), array( 'timeout' => 180000 ) );
 
 echo "Importing nodes:\n";
 while ($z->name === 'node') {
@@ -54,7 +54,7 @@ $z = new XMLReader();
 $z->open( $argv[1]);
 while ($z->read() && $z->name !== 'way' );
 $count = 0;
-$collection->remove( array( TYPE => 2 ) );
+$collection->remove( array( TYPE => 2 ), array( 'timeout' => 180000 ) );
 
 echo "Importing ways:\n";
 while ($z->name === 'way') {
@@ -94,7 +94,7 @@ $z = new XMLReader();
 $z->open( $argv[1]);
 while ($z->read() && $z->name !== 'relation' );
 $count = 0;
-$collection->remove( array( TYPE => 3 ) );
+$collection->remove( array( TYPE => 3 ), array( 'timeout' => 180000 ) );
 
 echo "Importing relations:\n";
 while ($z->name === 'relation') {
