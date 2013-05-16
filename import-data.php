@@ -18,7 +18,7 @@ $z = new XMLReader();
 $z->open( $argv[1]);
 while ($z->read() && $z->name !== 'node' );
 $count = 0;
-$collection->remove( array( TYPE => 1 ), array( 'timeout' => 180000 ) );
+$collection->remove( array( TYPE => 1 ), array( 'timeout' => 1800000 ) );
 
 echo "Importing nodes:\n";
 while ($z->name === 'node') {
@@ -54,7 +54,7 @@ $z = new XMLReader();
 $z->open( $argv[1]);
 while ($z->read() && $z->name !== 'way' );
 $count = 0;
-$collection->remove( array( TYPE => 2 ), array( 'timeout' => 180000 ) );
+$collection->remove( array( TYPE => 2 ), array( 'timeout' => 1800000 ) );
 
 echo "Importing ways:\n";
 while ($z->name === 'way') {
@@ -94,7 +94,7 @@ $z = new XMLReader();
 $z->open( $argv[1]);
 while ($z->read() && $z->name !== 'relation' );
 $count = 0;
-$collection->remove( array( TYPE => 3 ), array( 'timeout' => 180000 ) );
+$collection->remove( array( TYPE => 3 ), array( 'timeout' => 1800000 ) );
 
 echo "Importing relations:\n";
 while ($z->name === 'relation') {
@@ -218,6 +218,24 @@ function parseNode(&$q, $sxml)
 	$tagsCombined = array();
 	$ignoreTags = array( 'created_by', 'abutters' );
 
+	$meta = array();
+	if ( isset( $sxml['version'] ) )
+	{
+		$meta['v'] = (int) $sxml['version'];
+	}
+	if ( isset( $sxml['changeset'] ) )
+	{
+		$meta['cs'] = (int) $sxml['changeset'];
+	}
+	if ( isset( $sxml['uid'] ) )
+	{
+		$meta['uid'] = (int) $sxml['uid'];
+	}
+	if ( isset( $sxml['timestamp'] ) )
+	{
+		$meta['ts'] = (int) strtotime( $sxml['timestamp'] );
+	}
+
 	foreach( $sxml->tag as $tag )
 	{
 		if (!in_array( $tag['k'], $ignoreTags)) {
@@ -228,5 +246,9 @@ function parseNode(&$q, $sxml)
 	if ( sizeof( $tagsCombined ) > 0 )
 	{
 		$q[TAGS] = $tagsCombined;
+	}
+	if ( sizeof( $meta ) > 0 )
+	{
+		$q[META] = $meta;
 	}
 }
