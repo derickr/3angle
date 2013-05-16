@@ -148,6 +148,12 @@ switch ( $q )
 	default:
 	case 'amenity':
 		$query = array(
+			LOC => array(
+				'$near' => array(
+					'$geometry' => $center->getGeoJSON(),
+					'$maxDistance' => 500
+				),
+			),
 			TAGS => array(
 				'$in' => array(
 					new MongoRegex( "/^amenity=/" ),
