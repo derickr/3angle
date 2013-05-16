@@ -108,9 +108,25 @@ div.leisurepark {
 				layer.bindPopup(feature.properties.popupContent);
 			}
 		}
-
 		var geojsonLayer = new L.GeoJSON(null, geoJsonOptions);
-		map.addLayer(geojsonLayer);
+
+		var flickrLayerOptions = {
+			pointToLayer: function (featureData,latlng) {
+				myOptions = geojsonMarkerOptions;
+				myOptions.radius = calcCircleSize();
+				return new L.CircleMarker(latlng, myOptions);
+			},
+			onEachFeature: function (feature, layer) {
+				layer.bindPopup(feature.properties.popupContent);
+			}
+		}
+		var flickrLayer = new L.GeoJSON(null, flickrLayerOptions);
+		L.control.layers({"Base": OpenStreetMap}, {"Density": overlayer, "OSM Features": geojsonLayer, 'Flickr': flickrLayer}).addTo(map);
+
+		map.on('autopanstart', function(event) {
+			alert('fo');
+			disabledRefetch = true;
+		});
 
 		map.on('moveend', changeLocation);
 
@@ -137,41 +153,74 @@ div.leisurepark {
 			return [(latN + latS) / 2, (lonE + lonW) / 2];
 		}
 
+
 		function changeLocation(event) {
+
+			if (disabledRefetch) {
+				disabledRefetch = false;
+				return;
+			}
+
 			center = map.getCenter();
 
-			$.ajax({
-			  url: "fetch-poi.php" + '?lat=' + center.lat + '&lon=' + center.lng <?php if (isset($_GET['q'])) { echo " + '&q={$_GET['q']}'"; } ?>,
-			  beforeSend: function ( xhr ) {
-				xhr.overrideMimeType("text/plain; charset=x-user-defined");
-			  }
-			}).done(function ( data ) {
-				geojsonLayer.clearLayers();
-				res = jQuery.parseJSON(data);
-				res.forEach( function(value) {
-					geojsonLayer.addData(value);
+			if (map.hasLayer( flickrLayer )) {
+				$.ajax({
+				  url: "fetch-poi.php" + '?lat=' + center.lat + '&lon=' + center.lng + '&q=flickr',
+				  beforeSend: function ( xhr ) {
+					xhr.overrideMimeType("text/plain; charset=x-user-defined");
+				  }
+				}).done(function ( data ) {
+					flickrLayer.clearLayers();
+					res = jQuery.parseJSON(data);
+					res.forEach( function(value) {
+						flickrLayer.addData(value);
 
-					point = null;
-					classNamePrefix = '';
-					if (value.properties.classes) {
-						classNamePrefix = value.properties.classes + ' ';
-					}
-					if (value.geometry.type == 'Point') {
-						var myIcon = L.divIcon({html: value.properties.name, iconSize: 100, className: classNamePrefix + 'markerName'});
-						point = [ value.geometry.coordinates[1], value.geometry.coordinates[0] ];
-					} else if (value.geometry.type == 'Polygon') {
-						var myIcon = L.divIcon({html: value.properties.name, iconSize: 640, className: classNamePrefix + 'markerName'});
-						point = calcCentre( value.geometry.coordinates[0] );
-					}
-					if (point) {
-						L.marker(point, {icon: myIcon}).addTo(geojsonLayer);
-						if (false) {
-							L.polyline([center, point], {color: 'red'}).addTo(geojsonLayer);
+						if (value.geometry.type == 'Point') {
+							var myIcon = L.divIcon({html: "<img height='25' width='25' src='" + value.properties.thumbUrl + "'/>", iconSize: new L.Point(25, 25), className: 'flickrImage'});
+							point = [ value.geometry.coordinates[1], value.geometry.coordinates[0] ];
+
+							var marker = L.marker(point, {icon: myIcon});
+							marker.addTo(flickrLayer);
+							marker.bindPopup(value.properties.popupContent, { maxWidth:1000 });
 						}
-					}
-				} );
-				geojsonLayer.addLayer(new L.CircleMarker(center, { color: '#f00', radius: 5, fillOpacity: 1 } ) );
-			});
+					} );
+				});
+			}
+
+			if (map.hasLayer( geojsonLayer )) {
+				$.ajax({
+				  url: "fetch-poi.php" + '?lat=' + center.lat + '&lon=' + center.lng <?php if (isset($_GET['q'])) { echo " + '&q={$_GET['q']}'"; } ?>,
+				  beforeSend: function ( xhr ) {
+					xhr.overrideMimeType("text/plain; charset=x-user-defined");
+				  }
+				}).done(function ( data ) {
+					geojsonLayer.clearLayers();
+					res = jQuery.parseJSON(data);
+					res.forEach( function(value) {
+						geojsonLayer.addData(value);
+
+						point = null;
+						classNamePrefix = '';
+						if (value.properties.classes) {
+							classNamePrefix = value.properties.classes + ' ';
+						}
+						if (value.geometry.type == 'Point') {
+							var myIcon = L.divIcon({html: value.properties.name, iconSize: 100, className: classNamePrefix + 'markerName'});
+							point = [ value.geometry.coordinates[1], value.geometry.coordinates[0] ];
+						} else if (value.geometry.type == 'Polygon') {
+							var myIcon = L.divIcon({html: value.properties.name, iconSize: 640, className: classNamePrefix + 'markerName'});
+							point = calcCentre( value.geometry.coordinates[0] );
+						}
+						if (point) {
+							L.marker(point, {icon: myIcon}).addTo(geojsonLayer);
+							if (false) {
+								L.polyline([center, point], {color: 'red'}).addTo(geojsonLayer);
+							}
+						}
+					} );
+					geojsonLayer.addLayer(new L.CircleMarker(center, { color: '#f00', radius: 5, fillOpacity: 1 } ) );
+				});
+			}
 		}
 	</script>
 </body>

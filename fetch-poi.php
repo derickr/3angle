@@ -31,6 +31,19 @@ switch ( $q )
 		$s = $c->find( $query )->limit( 400 );
 		break;
 
+	case 'flickr':
+		$c = $d->selectCollection( 'flickr' );
+		$query = array(
+			LOC => array(
+				'$near' => array(
+					'$geometry' => $center->getGeoJSON(),
+				),
+			),
+			TAGS => 'tag=underground',
+		);
+		$s = $c->find( $query )->limit( 400 );
+		break;
+
 	case 'pubs': /* FIVE CLOSEST PUBS */
 		$query = array(
 			LOC => array(
@@ -159,12 +172,18 @@ foreach( $s as $o )
 		$ret['properties']['changed'] = true;
 	}
 	if ( isset( $o[TAGS] ) ) {
-		$name = $content = '';
+		$name = $content = ''; $image = false;
 		$classes = array();
 		foreach ( $o[TAGS] as $tagName => $value ) {
 			list( $tagName, $value ) = explode( '=', $value );
 			if ( $tagName == 'name' ) {
 				$name = $value; 
+			} else if ( $tagName == 'title' ) {
+				$name = $value; 
+			} else if ( $tagName == 'thumb_url' ) {
+				$ret['properties']['thumbUrl'] = $value;
+			} else if ( $tagName == 'full_url' ) {
+				$image = $value;
 			} else {
 				$content .= "<br/>{$tagName}: {$value}\n";
 			}
@@ -173,7 +192,11 @@ foreach( $s as $o )
 				$classes[] = preg_replace( '/[^a-z0-9]/', '', $tagName . $value );
 			}
 		}
-		$content .= "<br/><form action='checkin.php' method='post'><input type='hidden' name='object' value='{$o['_id']}'/><input type='submit' value='check in'/></form>";
+		if ($image) {
+			$content = "<br/><div style='width: 500px'><img src='{$image}'/></div>";
+		} else {
+			$content .= "<br/><form action='checkin.php' method='post'><input type='hidden' name='object' value='{$o['_id']}'/><input type='submit' value='check in'/></form>";
+		}
 		$ret['properties']['name'] = $name;
 		if ( isset( $o['distance'] ) )
 		{
