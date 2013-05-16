@@ -66,12 +66,15 @@ div.leisurepark {
 
 	<script>
 		var map = new L.Map('map');
+		var disabledRefetch;
 
 		var OpenStreetMapUrl = 'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
 			OpenStreetMapAttribution = 'Map data &copy; 2011 OpenStreetMap contributors',
 			OpenStreetMap = new L.TileLayer(OpenStreetMapUrl, {maxZoom: 18, attribution: OpenStreetMapAttribution, opacity: 0.7});
 
-		map.setView(new L.LatLng(<?php echo $lat; ?>, <?php echo $lon; ?>), 17).addLayer(OpenStreetMap);
+		map.setView(new L.LatLng(<?php echo $lat; ?>, <?php echo $lon; ?>), 17).addLayer(OpenStreetMap); 
+
+		var overlayer = new L.TileLayer('http://3angle/density.php?z={z}&x={x}&y={y}', {minZoom: 10, maxZoom: 14, opacity: 0.5});
 
 		var geojsonMarkerOptions = {
 			radius: 12,
