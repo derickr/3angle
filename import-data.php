@@ -4,10 +4,18 @@ include 'classes.php';
 
 /* The file to parse will be on the command line */
 $file = $argv[1];
+if ( $argc == 3 )
+{
+	$collection = $argv[2];
+}
+else
+{
+	$collection = COLLECTION;
+}
 
 /* Connect, empty the collection and create indexes */
 $m = new MongoClient( 'mongodb://localhost:27017' );
-$collection = $m->selectCollection( DATABASE, COLLECTION );
+$collection = $m->selectCollection( DATABASE, $collection );
 //$collection->drop();
 $collection->ensureIndex( array( TYPE => 1 ) );
 $collection->ensureIndex( array( LOC => '2dsphere' ) );
@@ -58,29 +66,46 @@ $collection->remove( array( TYPE => 2 ), array( 'timeout' => 1800000 ) );
 
 echo "Importing ways:\n";
 while ($z->name === 'way') {
-	$dom = new DomDocument;
-	$way = simplexml_import_dom($dom->importNode($z->expand(), true));
+	$currentCount = 0;
+	$nodeIds = array();
+	$locationCache = array();
+	$ways = array();
 
-	/* #3: Create the document structure */
-	$q = array();
-	/* Add type and _id elements here */
-	$q['_id'] = "w" . (string) $way['id'];
-	$q[TYPE] = 2;
-	/* Check the fetchLocations() and parseNode() implementations */
-	fetchLocations($collection, $q, $way);
-	parseNode($q, $way);
+	while ($z->name === "way" && $currentCount < 250) {
+		$dom = new DomDocument;
+		$way = simplexml_import_dom($dom->importNode($z->expand(), true));
+		recordNodeLinks( $nodeIds, $way );
 
-	try
-	{
-		$collection->insert( $q );
-	}
-	catch ( MongoCursorException $e )
-	{
-		echo "\n", $q['_id'], ': ', $e->getMessage(), "\n";
+		$ways[] = $way;
+		$z->next('way');
+		$currentCount++;
 	}
 
-	$z->next('way');
-	if (++$count % 100 === 0) {
+	$locationCache = fetchLocationsForNodes( $collection, $nodeIds );
+
+	if (count($ways) > 0) {
+		foreach ( $ways as $way )
+		{
+			$q = array();
+			$q['_id'] = "w" . (string) $way['id'];
+			$q[TYPE] = 2;
+
+			fetchLocations($collection, $q, $way, $locationCache );
+			parseNode($q, $way);
+
+			try
+			{
+				$collection->insert( $q );
+			}
+			catch ( MongoCursorException $e )
+			{
+				echo "\n", $q['_id'], ': ', $e->getMessage(), "\n";
+			}
+		}
+	}
+
+	$count += count($ways);
+	if ($count % 100 === 0) {
 		echo ".";
 	}
 	if ($count % 10000 === 0) {
@@ -106,7 +131,7 @@ while ($z->name === 'relation') {
 	/* Add type and _id elements here */
 	$q['_id'] = "r" . (string) $relation['id'];
 	$q[TYPE] = 3;
-	/* Check the fetchLocations() and parseNode() implementations */
+
 	parseNode($q, $relation);
 	if ( !fetchMembers($collection, $q, $relation, $idsToDelete ) )
 	{
@@ -138,23 +163,40 @@ nextrel:
 }
 echo "\n";
 
-function fetchLocations($collection, &$q, $node)
+function fetchLocationsForNodes( $collection, $nodeIds )
 {
-	$tmp = $locations = $nodeIds = array();
-	$currentLoc = null;
+	$locations = $tmp = array();
 
-	foreach ($node->nd as $nd) {
-		$nodeIds[] = 'n' . (int) $nd['ref'];
-	}
 	$r = $collection->find( array( '_id' => array( '$in' => $nodeIds ) ) );
 	foreach ( $r as $n ) {
 		$tmp[$n["_id"]] = GeoJSONPoint::fromGeoJson( $n[LOC] )->p;
 	}
 	foreach ( $nodeIds as $id ) {
 		if (isset($tmp[$id])) {
-			$locations[] = $tmp[$id];
+			$locations[ $id ] = $tmp[$id];
 		}
 	}
+
+	return $locations;
+}
+
+function recordNodeLinks( &$nodeIds, $node )
+{
+	foreach ($node->nd as $nd) {
+		$nodeIds[] = 'n' . (int) $nd['ref'];
+	}
+}
+
+function fetchLocations($collection, &$q, $node, $locationCache )
+{
+	$nodeIds = $locations = array();
+	$currentLoc = null;
+
+	foreach ($node->nd as $nd) {
+		$nodeIds[] = (int) $nd['ref'];
+		$locations[] = $locationCache['n' . (int) $nd['ref']];
+	}
+
 	if ( $nodeIds[0] == $nodeIds[sizeof( $nodeIds ) - 1] )
 	{
 		/* Extra array encapsulation to support outer/inner rings */
