@@ -1,6 +1,7 @@
 <?php
 $lat = 51.508;
 $lon = -0.128;
+
 if ( isset( $_GET['lat'] ) )
 {
 	$lat = (float) $_GET['lat'];
@@ -56,6 +57,7 @@ div.leisurepark {
 
 	<link rel="stylesheet" href="leaflet.css" />
 	<!--[if lte IE 8]><link rel="stylesheet" href="leaflet.ie.css" /><![endif]-->
+	<link rel="stylesheet" href="Leaflet.markercluster/dist/MarkerCluster.Default.css" />
 </head>
 
 <body onLoad="changeLocation(false);">
@@ -63,6 +65,7 @@ div.leisurepark {
 
 	<script type="text/javascript" src="leaflet.js"></script>
 	<script type="text/javascript" src="jquery-1.7.2.min.js"></script>
+	<script type="text/javascript" src="Leaflet.markercluster/dist/leaflet.markercluster.js"></script>
 
 	<script>
 		var map = new L.Map('map');
@@ -72,7 +75,7 @@ div.leisurepark {
 			OpenStreetMapAttribution = 'Map data &copy; 2011 OpenStreetMap contributors',
 			OpenStreetMap = new L.TileLayer(OpenStreetMapUrl, {maxZoom: 18, attribution: OpenStreetMapAttribution, opacity: 0.7});
 
-		map.setView(new L.LatLng(<?php echo $lat; ?>, <?php echo $lon; ?>), 17).addLayer(OpenStreetMap); 
+		map.setView(new L.LatLng(<?php echo $lat; ?>, <?php echo $lon; ?>), 14).addLayer(OpenStreetMap); 
 
 		var overlayer = new L.TileLayer('http://3angle/density.php?z={z}&x={x}&y={y}', {minZoom: 10, maxZoom: 14, opacity: 0.5});
 
@@ -111,7 +114,7 @@ div.leisurepark {
 				layer.bindPopup(feature.properties.popupContent);
 			}
 		}
-		var geojsonLayer = new L.GeoJSON(null, geoJsonOptions);
+		var geojsonLayer = new L.GeoJSON(null, geoJsonOptions).addTo(map);
 
 		var flickrLayerOptions = {
 			pointToLayer: function (featureData,latlng) {
@@ -168,25 +171,28 @@ div.leisurepark {
 
 			if (map.hasLayer( flickrLayer )) {
 				$.ajax({
-				  url: "fetch-poi.php" + '?lat=' + center.lat + '&lon=' + center.lng + '&q=flickr',
+				  url: "fetch-poi.php" + '?lat=' + center.lat + '&lon=' + center.lng + '&q=photos',
 				  beforeSend: function ( xhr ) {
 					xhr.overrideMimeType("text/plain; charset=x-user-defined");
 				  }
 				}).done(function ( data ) {
 					flickrLayer.clearLayers();
+
+					var clusterFlickrLayer = new L.MarkerClusterGroup({maxClusterRadius: 20});
+					
 					res = jQuery.parseJSON(data);
 					res.forEach( function(value) {
-						flickrLayer.addData(value);
-
 						if (value.geometry.type == 'Point') {
-							var myIcon = L.divIcon({html: "<img height='25' width='25' src='" + value.properties.thumbUrl + "'/>", iconSize: new L.Point(25, 25), className: 'flickrImage'});
+							var myIcon = L.divIcon({html: "<img height='50' width='50' src='" + value.properties.thumbUrl + "'/>", iconSize: new L.Point(50, 50), className: 'flickrImage'});
 							point = [ value.geometry.coordinates[1], value.geometry.coordinates[0] ];
 
 							var marker = L.marker(point, {icon: myIcon});
-							marker.addTo(flickrLayer);
+							marker.addTo(clusterFlickrLayer);
 							marker.bindPopup(value.properties.popupContent, { maxWidth:1000 });
 						}
 					} );
+
+					flickrLayer.addLayer(clusterFlickrLayer);
 				});
 			}
 
@@ -214,7 +220,7 @@ div.leisurepark {
 							var myIcon = L.divIcon({html: value.properties.name, iconSize: 640, className: classNamePrefix + 'markerName'});
 							point = calcCentre( value.geometry.coordinates[0] );
 						}
-						if (point) {
+						if (false && point) {
 							L.marker(point, {icon: myIcon}).addTo(geojsonLayer);
 							if (false) {
 								L.polyline([center, point], {color: 'red'}).addTo(geojsonLayer);
