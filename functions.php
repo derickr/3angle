@@ -173,13 +173,53 @@ class Triangle
 		return $cuisines;
 	}
 
-	private function create_widget( $type, $name, $initValue )
+	private static function static_widget( $name, $value )
+	{
+		return "<tr><td>$name</td><td>{$value}</td></tr>\n";
+	}
+
+	private static function freeform_widget( $name, $value, $suggestions )
+	{
+		if ( $suggestions )
+		{
+			if ( !in_array( "«delete»", $suggestions ) && $value !== '' )
+			{
+				array_unshift( $suggestions, "«delete»" );
+			}
+			array_unshift( $suggestions, $value );
+			$ret = "<tr><td>$name</td><td>";
+			$ret .= "Current:<br/>{$value}<br/>Suggestions:<br/>\n";
+			$ret .= "<select name='{$name}'>\n";
+			foreach ( $suggestions as $s )
+			{
+				if ( $value == $s )
+				{
+					$ret .= "\t<option selected='selected' value='{$s}'>{$s}</option>\n";
+				}
+				else
+				{
+					$ret .= "\t<option value='{$s}'>{$s}</option>\n";
+				}
+			}
+			$ret .= "</select><br/>\n";
+			$ret .= "New suggestion:<br/><input type='text' name='{$name}_n'>\n";
+			$ret .= "</td></tr>\n";
+//			return "<tr><td>$name</td><td><input type='text' name='{$name}' value='{$value}'></td></tr>\n";
+			return $ret;
+		}
+		else
+		{
+			return "<tr><td>$name</td><td><input type='text' name='{$name}' value='{$value}'></td></tr>\n";
+		}
+	}
+
+	private function create_widget( $type, $name, $initValue, $suggestions)
 	{
 		$value = isset( $initValue[2] ) ? $initValue[2] : '';
 		switch ( $type )
 		{
 			case 'static':
-				return "<tr><td>$name</td><td>{$value}</td></tr>\n";
+				return self::static_widget( $name, $value );
 
 			case 'boolean':
 				$ret = "<tr><td>$name</td><td><select name='{$name}'>";
@@ -190,7 +230,7 @@ class Triangle
 				return $ret;
 
 			case 'freeform':
-				return "<tr><td>$name</td><td><input type='text' name='{$name}' value='{$value}'></td></tr>\n";
+				return self::freeform_widget( $name, $value, $suggestions );
 
 			case 'listCuisine':
 				$ret = "<tr><td>$name</td><td><select name='{$name}'>";
@@ -208,13 +248,26 @@ class Triangle
 
 	function show_data()
 	{
+		/* Query for suggestions */
+		$r = $this->sc->aggregate( array(
+			array( '$match' => array( 'id' => $this->o['_id'] ) ),
+			array( '$sort' => array( 'key' => 1, 'value' => 1 ) ),
+			array( '$group' => array( '_id' => '$key', 'items' => array( '$push' => '$value' ) ) ),
+		) );
+
+		$suggestions = array();
+		foreach ( $r['result'] as $kp )
+		{
+			$suggestions[$kp['_id']] = $kp['items'];
+		}
+
 		$ret = '';
 		$ret .= "<input type='hidden' name='action' value='checkin'>\n";
 		$ret .= "<input type='hidden' name='object' value='{$this->o['_id']}'>\n";
 		$ret .= '<table>';
 		foreach ( $this->fields as $name => $value )
 		{
-			$ret .= $this->create_widget( $value[1], $name, $value );
+			$ret .= $this->create_widget( $value[1], $name, $value, array_key_exists( $name, $suggestions ) ? $suggestions[$name] : false );
 		}
 		$ret .= "<tr><td colspan='2'><input type='submit' name='checkin' value='check in'></td></tr>\n";
 		$ret .= '</table>';
@@ -228,10 +281,24 @@ class Triangle
 		unset( $values['action'] );
 		unset( $values['object'] );
 		unset( $values['checkin'] );
+			
+		/* Check for _n values first */
+		foreach ( $values as $key => $value )
+		{
+			if ( preg_match( "/(.*)_n$/", $key, $m ) )
+			{
+				$values[$m[1]] = $values[$key];
+				unset( $values[$key] );
+			}
+		}
 
-		foreach( $values as $key => $value )
+		foreach ( $values as $key => $value )
 		{
 			if ( $value === '' )
+			{
+				continue;
+			}
+			if ( preg_match( '/_n$/', $key ) )
 			{
 				continue;
 			}
@@ -257,13 +324,12 @@ class Triangle
 
 	function doSuggestion( $id, $key, $value )
 	{
-		var_dump ($id, $key, $value );
 		// first we check if there is an entry already
 		if ( $this->sc->findOne( array( 'id' => $id, 'key' => $key, 'value' => $value ) ) === null )
 		{
 			// we need to add something
 			$this->sc->insert(
-				array( 'id' => $id, 'key' => $key, 'value' => $value, 'suggester' => time() )
+				array( 'id' => $id, 'key' => $key, 'value' => $value, 'suggester' => time(), 'last' => time() )
 			);
 		}
 		else
@@ -271,7 +337,10 @@ class Triangle
 			// if so, we just push the new USER id (timestamp in our case)
 			$this->sc->update(
 				array( 'id' => $id, 'key' => $key, 'value' => $value ),
-				array( '$addToSet' => array( 'approver' => time() ) )
+				array(
+					'$set' => array( 'last' => time() ),
+					'$addToSet' => array( 'approver' => time() )
+				)
 			);
 		}
 	}
