@@ -21,7 +21,6 @@ $collection->ensureIndex( array( TYPE => 1 ) );
 $collection->ensureIndex( array( LOC => '2dsphere' ) );
 $collection->ensureIndex( array( TAGS => 1 ) );
 
-if (0) {
 /* Parse the nodes */
 $z = new XMLReader();
 $z->open( $argv[1]);
@@ -57,7 +56,6 @@ while ($z->name === 'node') {
 	}
 }
 echo "\n";
-}
 
 /* Parse the ways */
 $z = new XMLReader();
