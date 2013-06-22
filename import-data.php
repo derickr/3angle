@@ -21,12 +21,17 @@ $collection->ensureIndex( array( TYPE => 1 ) );
 $collection->ensureIndex( array( LOC => '2dsphere' ) );
 $collection->ensureIndex( array( TAGS => 1 ) );
 
+$cache = $m->selectCollection( "cache_" . DATABASE, 'nodecache' );
+$cache->drop();
+
 /* Parse the nodes */
 $z = new XMLReader();
 $z->open( $argv[1]);
 while ($z->read() && $z->name !== 'node' );
 $count = 0;
 $collection->remove( array( TYPE => 1 ), array( 'timeout' => 1800000 ) );
+$cacheItems = array();
+$collectionItems = array();
 
 echo "Importing nodes:\n";
 while ($z->name === 'node') {
@@ -44,7 +49,22 @@ while ($z->name === 'node') {
 	parseNode($q, $node);
 
 	/* #2: Write the insert command here */
-	$collection->insert( $q );
+	if ( array_key_exists( TAGS, $q ) )
+	{
+		$collectionItems[] = $q;
+		if ( count( $collectionItems ) >= 10000 )
+		{
+			$collection->batchInsert( $collectionItems, array( 'continueOnError' => true ) );
+			$collectionItems = array();
+		}
+	}
+
+	$cacheItems[] = array( '_id' => (int) $node['id'], 'l' => array( (float) $node['lon'], (float) $node['lat'] ) );
+	if ( count( $cacheItems ) >= 10000 )
+	{
+		$cache->batchInsert( $cacheItems, array( 'continueOnError' => true ) );
+		$cacheItems = array();
+	}
 
 	$z->next('node');
 	$count++;
@@ -55,6 +75,9 @@ while ($z->name === 'node') {
 		echo "\n", $count, "\n";
 	}
 }
+
+$collection->batchInsert( $collectionItems, array( 'continueOnError' => true ) );
+$cache->batchInsert( $cacheItems, array( 'continueOnError' => true ) );
 echo "\n";
 
 /* Parse the ways */
@@ -71,19 +94,19 @@ while ($z->name === 'way') {
 	$locationCache = array();
 	$ways = array();
 
-	while ($z->name === "way" && $currentCount < 25) {
+	while ($z->name === "way" && $currentCount < 1000) {
 		$dom = new DomDocument;
 		$way = simplexml_import_dom($dom->importNode($z->expand(), true));
 		recordNodeLinks( $nodeIds, $way );
-
 		$ways[] = $way;
 		$z->next('way');
 		$currentCount++;
 	}
 
-	$locationCache = fetchLocationsForNodes( $collection, $nodeIds );
+	$locationCache = fetchLocationsForNodes( $cache, $nodeIds );
 
 	if (count($ways) > 0) {
+		$qs = array();
 		foreach ( $ways as $way )
 		{
 			$q = array();
@@ -93,15 +116,17 @@ while ($z->name === 'way') {
 			fetchLocations($collection, $q, $way, $locationCache );
 			parseNode($q, $way);
 
-			try
-			{
-				$collection->insert( $q );
-			}
-			catch ( MongoCursorException $e )
-			{
-				echo "\n", $q['_id'], ': ', $e->getMessage(), "\n";
-			}
+			$qs[] = $q;
 		}
+	}
+
+	try
+	{
+		$collection->batchInsert( $qs, array( 'continueOnError' => 1 ) );
+	}
+	catch ( MongoCursorException $e )
+	{
+		echo "\n", $q['_id'], ': ', $e->getMessage(), "\n";
 	}
 
 	$count += count($ways);
@@ -163,13 +188,13 @@ nextrel:
 }
 echo "\n";
 
-function fetchLocationsForNodes( $collection, $nodeIds )
+function fetchLocationsForNodes( $cache, $nodeIds )
 {
 	$locations = $tmp = array();
 
-	$r = $collection->find( array( '_id' => array( '$in' => $nodeIds ) ) );
+	$r = $cache->find( array( '_id' => array( '$in' => $nodeIds ) ) );
 	foreach ( $r as $n ) {
-		$tmp[$n["_id"]] = GeoJSONPoint::fromGeoJson( $n[LOC] )->p;
+		$tmp[$n["_id"]] = $n[LOC];
 	}
 	foreach ( $nodeIds as $id ) {
 		if (isset($tmp[$id])) {
@@ -183,7 +208,7 @@ function fetchLocationsForNodes( $collection, $nodeIds )
 function recordNodeLinks( &$nodeIds, $node )
 {
 	foreach ($node->nd as $nd) {
-		$nodeIds[] = 'n' . (int) $nd['ref'];
+		$nodeIds[] = (int) $nd['ref'];
 	}
 }
 
@@ -194,7 +219,7 @@ function fetchLocations($collection, &$q, $node, $locationCache )
 
 	foreach ($node->nd as $nd) {
 		$nodeIds[] = (int) $nd['ref'];
-		$locations[] = $locationCache['n' . (int) $nd['ref']];
+		$locations[] = $locationCache[(int) $nd['ref']];
 	}
 
 	if ( $nodeIds[0] == $nodeIds[sizeof( $nodeIds ) - 1] )
