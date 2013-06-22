@@ -10,16 +10,15 @@ header('Content-type: text/plain');
 $m = new MongoClient( 'mongodb://localhost' );
 $d = $m->selectDb( DATABASE );
 $c = $d->selectCollection( COLLECTION );
-$center = new GeoJSONPoint( (float) $_GET['lon'], (float) $_GET['lat'] );
+$polygon = GeoJSONPolygon::createFromBounds( (float) $_GET['n'], (float) $_GET['e'], (float) $_GET['s'], (float) $_GET['w'] );
 
 $c = $d->selectCollection( 'flickr' );
 $query = array(
 	LOC => array(
-		'$near' => array(
-			'$geometry' => $center->getGeoJSON(),
+		'$geoWithin' => array(
+			'$geometry' => $polygon->getGeoJSON(),
 		),
 	),
-	TAGS => 'tag=underground',
 );
 $s = $c->find( $query )->limit( 8000 );
 

@@ -1,9 +1,9 @@
 if (map.hasLayer( flickrLayer )) {
 	$.ajax({
-	  url: "maps-flickr/fetch-poi.php" + '?lat=' + center.lat + '&lon=' + center.lng,
-	  beforeSend: function ( xhr ) {
-		xhr.overrideMimeType("text/plain; charset=x-user-defined");
-	  }
+		url: "maps-flickr/fetch-poi.php" + '?n=' + bounds.getNorthEast().lat + '&e=' + bounds.getNorthEast().lng + '&s=' + bounds.getSouthWest().lat + '&w=' + bounds.getSouthWest().lng,
+		beforeSend: function ( xhr ) {
+			xhr.overrideMimeType("text/plain; charset=x-user-defined");
+		}
 	}).done(function ( data ) {
 		flickrLayer.clearLayers();
 

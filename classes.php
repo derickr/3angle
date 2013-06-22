@@ -54,5 +54,17 @@ class GeoJSONPolygon
 		$geo = new GeoJSONPolygon( $json['coordinates'] );
 		return $geo;
 	}
+
+	static function createFromBounds( $n, $e, $s, $w )
+	{
+		$coordiates = [
+			[ $e, $n ],
+			[ $w, $n ],
+			[ $w, $s ],
+			[ $e, $s ],
+			[ $e, $n ],
+		];
+		return new GeoJSONPolygon( [ $coordiates ] );
+	}
 }
 ?>

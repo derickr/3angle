@@ -154,6 +154,7 @@ echo join( ", ", $info ), "\n";
 			}
 
 			center = map.getCenter();
+			bounds = map.getBounds();
 
 <?php
 foreach ( $layers as $layerName => $layerDir )
