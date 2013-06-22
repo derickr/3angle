@@ -1,6 +1,10 @@
 <?php
+include 'config.php';
+
 $lat = 51.508;
 $lon = -0.128;
+$zoom = 10;
+$defaultLayers = array();
 
 if ( isset( $_GET['lat'] ) )
 {
@@ -9,6 +13,14 @@ if ( isset( $_GET['lat'] ) )
 if ( isset( $_GET['lon'] ) )
 {
 	$lon = (float) $_GET['lon'];
+}
+if ( isset( $_GET['zoom'] ) )
+{
+	$zoom = (float) $_GET['zoom'];
+}
+if ( isset( $_GET['l'] ) )
+{
+	$defaultLayers = explode( ',', $_GET['l'] );
 }
 ?>
 <!DOCTYPE html>
@@ -72,65 +84,39 @@ div.leisurepark {
 		var disabledRefetch;
 
 		var OpenStreetMapUrl = 'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-			OpenStreetMapAttribution = 'Map data &copy; 2011 OpenStreetMap contributors',
+			OpenStreetMapAttribution = 'Map data &copy; 2013 OpenStreetMap contributors',
 			OpenStreetMap = new L.TileLayer(OpenStreetMapUrl, {maxZoom: 18, attribution: OpenStreetMapAttribution, opacity: 0.7});
 
-		map.setView(new L.LatLng(<?php echo $lat; ?>, <?php echo $lon; ?>), 14).addLayer(OpenStreetMap); 
+		map.setView(new L.LatLng(<?php echo $lat; ?>, <?php echo $lon; ?>), <?php echo $zoom; ?>).addLayer(OpenStreetMap); 
 
 		var overlayer = new L.TileLayer('http://3angle/density.php?z={z}&x={x}&y={y}', {minZoom: 10, maxZoom: 14, opacity: 0.5});
 
-		var geojsonMarkerOptions = {
-			radius: 12,
-			fillColor: "#8888ff",
-			color: "#33f",
-			weight: 1,
-			opacity: 1,
-			fillOpacity: 0.6
-		};
-		var geojsonLineOptions = {
-			fillColor: "#8888ff",
-			color: "#33f",
-			weight: 3,
-			opacity: 1,
-			width: 3,
-			fillOpacity: 0.6
-		};
-		var geojsonAreaOptions = {
-			radius: 8,
-			fillColor: "#8888ff",
-			color: "#33f",
-			weight: 1,
-			opacity: 1,
-			fillOpacity: 0.2
-		};
+<?php
+foreach ( $layers as $layerName => $layerDir )
+{
+	$layerName = strtolower( $layerName );
+	include "{$layerDir}/layer-def.js";
 
-		var geoJsonOptions = {
-			pointToLayer: function (featureData,latlng) {
-				myOptions = geojsonMarkerOptions;
-				myOptions.radius = calcCircleSize();
-				return new L.CircleMarker(latlng, myOptions);
-			},
-			onEachFeature: function (feature, layer) {
-				layer.bindPopup(feature.properties.popupContent);
-			}
-		}
-		var geojsonLayer = new L.GeoJSON(null, geoJsonOptions).addTo(map);
+	if ( in_array( $layerName, $defaultLayers ) )
+	{
+		echo "{$layerName}Layer.addTo(map);\n";
+	}
+}
+?>
 
-		var flickrLayerOptions = {
-			pointToLayer: function (featureData,latlng) {
-				myOptions = geojsonMarkerOptions;
-				myOptions.radius = calcCircleSize();
-				return new L.CircleMarker(latlng, myOptions);
-			},
-			onEachFeature: function (feature, layer) {
-				layer.bindPopup(feature.properties.popupContent);
-			}
-		}
-		var flickrLayer = new L.GeoJSON(null, flickrLayerOptions);
-		L.control.layers({"Base": OpenStreetMap}, {"Density": overlayer, "OSM Features": geojsonLayer, 'Flickr': flickrLayer}).addTo(map);
+		L.control.layers({"Base": OpenStreetMap}, {
+<?php
+$info = array();
+foreach ( $layers as $layerName => $dummy )
+{
+	$lowLayerName = strtolower( $layerName );
+	$info[] = "'$layerName': {$lowLayerName}Layer";
+}
+echo join( ", ", $info ), "\n";
+?>
+		}).addTo(map);
 
 		map.on('autopanstart', function(event) {
-			alert('fo');
 			disabledRefetch = true;
 		});
 
@@ -169,67 +155,13 @@ div.leisurepark {
 
 			center = map.getCenter();
 
-			if (map.hasLayer( flickrLayer )) {
-				$.ajax({
-				  url: "fetch-poi.php" + '?lat=' + center.lat + '&lon=' + center.lng + '&q=photos',
-				  beforeSend: function ( xhr ) {
-					xhr.overrideMimeType("text/plain; charset=x-user-defined");
-				  }
-				}).done(function ( data ) {
-					flickrLayer.clearLayers();
-
-					var clusterFlickrLayer = new L.MarkerClusterGroup({maxClusterRadius: 20});
-					
-					res = jQuery.parseJSON(data);
-					res.forEach( function(value) {
-						if (value.geometry.type == 'Point') {
-							var myIcon = L.divIcon({html: "<img height='50' width='50' src='" + value.properties.thumbUrl + "'/>", iconSize: new L.Point(50, 50), className: 'flickrImage'});
-							point = [ value.geometry.coordinates[1], value.geometry.coordinates[0] ];
-
-							var marker = L.marker(point, {icon: myIcon});
-							marker.addTo(clusterFlickrLayer);
-							marker.bindPopup(value.properties.popupContent, { maxWidth:1000 });
-						}
-					} );
-
-					flickrLayer.addLayer(clusterFlickrLayer);
-				});
-			}
-
-			if (map.hasLayer( geojsonLayer )) {
-				$.ajax({
-				  url: "fetch-poi.php" + '?lat=' + center.lat + '&lon=' + center.lng <?php if (isset($_GET['q'])) { echo " + '&q={$_GET['q']}'"; } ?>,
-				  beforeSend: function ( xhr ) {
-					xhr.overrideMimeType("text/plain; charset=x-user-defined");
-				  }
-				}).done(function ( data ) {
-					geojsonLayer.clearLayers();
-					res = jQuery.parseJSON(data);
-					res.forEach( function(value) {
-						geojsonLayer.addData(value);
-
-						point = null;
-						classNamePrefix = '';
-						if (value.properties.classes) {
-							classNamePrefix = value.properties.classes + ' ';
-						}
-						if (value.geometry.type == 'Point') {
-							var myIcon = L.divIcon({html: value.properties.name, iconSize: 100, className: classNamePrefix + 'markerName'});
-							point = [ value.geometry.coordinates[1], value.geometry.coordinates[0] ];
-						} else if (value.geometry.type == 'Polygon') {
-							var myIcon = L.divIcon({html: value.properties.name, iconSize: 640, className: classNamePrefix + 'markerName'});
-							point = calcCentre( value.geometry.coordinates[0] );
-						}
-						if (false && point) {
-							L.marker(point, {icon: myIcon}).addTo(geojsonLayer);
-							if (false) {
-								L.polyline([center, point], {color: 'red'}).addTo(geojsonLayer);
-							}
-						}
-					} );
-					geojsonLayer.addLayer(new L.CircleMarker(center, { color: '#f00', radius: 5, fillOpacity: 1 } ) );
-				});
-			}
+<?php
+foreach ( $layers as $layerName => $layerDir )
+{
+	$layerName = strtolower( $layerName );
+	include "{$layerDir}/layer-action.js";
+}
+?>
 		}
 	</script>
 </body>
