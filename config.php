@@ -7,8 +7,14 @@ define( 'LOC', 'l' );
 define( 'TAGS', 'ts' );
 define( 'META', 'm' );
 
-$layers = array(
-	'Timezone' => 'maps-timezone',
-	'Flickr' => 'maps-flickr',
-);
+$layers = [
+	'Flickr' => [
+		'directory' => 'maps-flickr',
+		'layerName' => 'flickr',
+	],
+	'Timezone' => [
+		'directory' => 'maps-timezone',
+		'layerName' => 'timezone',
+	]
+];
 ?>

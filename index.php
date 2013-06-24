@@ -92,27 +92,25 @@ div.leisurepark {
 		var overlayer = new L.TileLayer('http://3angle/density.php?z={z}&x={x}&y={y}', {minZoom: 10, maxZoom: 14, opacity: 0.5});
 
 <?php
-foreach ( $layers as $layerName => $layerDir )
+foreach ( $layers as $layerName => $info )
 {
-	$layerName = strtolower( $layerName );
-	include "{$layerDir}/layer-def.js";
+	include "{$info['directory']}/layer-def.js";
 
-	if ( in_array( $layerName, $defaultLayers ) )
+	if ( in_array( $info['layerName'], $defaultLayers ) )
 	{
-		echo "{$layerName}Layer.addTo(map);\n";
+		echo "{$info['layerName']}Layer.addTo(map);\n";
 	}
 }
 ?>
 
 		L.control.layers({"Base": OpenStreetMap}, {
 <?php
-$info = array();
-foreach ( $layers as $layerName => $dummy )
+$includeLayers = array();
+foreach ( $layers as $layerName => $info )
 {
-	$lowLayerName = strtolower( $layerName );
-	$info[] = "'$layerName': {$lowLayerName}Layer";
+	$includeLayers[] = "'$layerName': {$info['layerName']}Layer";
 }
-echo join( ", ", $info ), "\n";
+echo join( ", ", $includeLayers ), "\n";
 ?>
 		}).addTo(map);
 
@@ -157,10 +155,9 @@ echo join( ", ", $info ), "\n";
 			bounds = map.getBounds();
 
 <?php
-foreach ( $layers as $layerName => $layerDir )
+foreach ( $layers as $layerName => $info )
 {
-	$layerName = strtolower( $layerName );
-	include "{$layerDir}/layer-action.js";
+	include "{$info['directory']}/layer-action.js";
 }
 ?>
 		}
