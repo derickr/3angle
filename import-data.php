@@ -219,7 +219,10 @@ function fetchLocations($collection, &$q, $node, $locationCache )
 
 	foreach ($node->nd as $nd) {
 		$nodeIds[] = (int) $nd['ref'];
-		$locations[] = $locationCache[(int) $nd['ref']];
+		if ( array_key_exists( (int) $nd['ref'], $locationCache ) )
+		{
+			$locations[] = $locationCache[(int) $nd['ref']];
+		}
 	}
 
 	if ( $nodeIds[0] == $nodeIds[sizeof( $nodeIds ) - 1] )
