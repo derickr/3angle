@@ -12,6 +12,10 @@ $layers = [
 		'directory' => 'maps-flickr',
 		'layerName' => 'flickr',
 	],
+	'Great Circle' => [
+		'directory' => 'maps-great-circle',
+		'layerName' => 'gc',
+	],
 	'Timezone' => [
 		'directory' => 'maps-timezone',
 		'layerName' => 'timezone',
