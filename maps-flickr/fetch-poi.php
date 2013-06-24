@@ -10,7 +10,12 @@ header('Content-type: text/plain');
 $m = new MongoClient( 'mongodb://localhost' );
 $d = $m->selectDb( DATABASE );
 $c = $d->selectCollection( COLLECTION );
-$polygon = GeoJSONPolygon::createFromBounds( (float) $_GET['n'], (float) $_GET['e'], (float) $_GET['s'], (float) $_GET['w'] );
+$polygon = GeoJSONPolygon::createFromBounds(
+	min( 90, (float) $_GET['n'] ),
+	min( 180, (float) $_GET['e']) ,
+	max( -90, (float) $_GET['s'] ),
+	max( -180, (float) $_GET['w'] )
+);
 
 $c = $d->selectCollection( 'flickr' );
 $query = array(
