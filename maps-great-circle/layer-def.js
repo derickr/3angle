@@ -14,14 +14,6 @@ var gcLineOptions = {
 	width: 3,
 	fillOpacity: 0.6
 };
-var gcAreaOptions = {
-	radius: 8,
-	fillColor: "#8888ff",
-	color: "#33f",
-	weight: 1,
-	opacity: 1,
-	fillOpacity: 0.2
-};
 
 var gcOptions = {
 	pointToLayer: function (featureData,latlng) {
@@ -30,6 +22,9 @@ var gcOptions = {
 		return new L.CircleMarker(latlng, myOptions);
 	},
 	onEachFeature: function (feature, layer) {
+		if (feature.geometry.type == 'LineString') {
+			layer.setStyle(gcLineOptions);
+		}
 		layer.bindPopup(feature.properties.popupContent);
 	}
 }
