@@ -8,6 +8,10 @@ define( 'TAGS', 'ts' );
 define( 'META', 'm' );
 
 $layers = [
+	'5 Pubs' => [
+		'directory' => 'maps-5pubs',
+		'layerName' => 'fivepubs',
+	],
 	'Flickr' => [
 		'directory' => 'maps-flickr',
 		'layerName' => 'flickr',
@@ -15,6 +19,10 @@ $layers = [
 	'Great Circle' => [
 		'directory' => 'maps-great-circle',
 		'layerName' => 'gc',
+	],
+	'Real Cider/Real Ale' => [
+		'directory' => 'maps-pubs-aggregation',
+		'layerName' => 'pubsaggr',
 	],
 	'Timezone' => [
 		'directory' => 'maps-timezone',

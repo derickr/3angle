@@ -56,19 +56,6 @@ switch ( $q )
 		$s = $c->find( $query )->limit( 10000 );
 		break;
 
-	case '5pubs': /* FIVE CLOSEST PUBS */
-		$query = array(
-			LOC => array(
-				'$near' => array(
-					'$geometry' => $center->getGeoJSON(),
-					'$maxDistance' => 2500
-				),
-			),
-			TAGS => 'amenity=pub',
-		);
-		$s = $c->find( $query )->limit( 5 );
-		break;
-
 	case 'pubsnosmoke': /* FIVE CLOSEST PUBS */
 		$query = array(
 			LOC => array(
@@ -107,28 +94,6 @@ switch ( $q )
 			TAGS => array( '$exists' => true ),
 		);
 		$s = $c->find( $query )->sort( array( 'l.type' => -1 ) );
-		break;
-
-
-	case 'aggr': /* CLOSESTS with DISTANCE (aggregation) */
-		//db.poiConcat.aggregate( { $geoNear: { near: [ -0.153191, 51.53419911 ],
-		//		distanceField : 'distance', distanceMultiplier: 6371, maxDistance:
-		//		5000, spherical: true, num: 10, query: { ts: 'amenity=pub' } } } );
-		$res = $c->aggregate( array(
-			'$geoNear' => array(
-				'near' => $center->p,
-				'distanceField' => 'distance',
-				'distanceMultiplier' => 6371000,
-				'maxDistance' => 500 / 6371000,
-				'spherical' => true,
-				'query' => array( '$or' => array(
-#			array( TAGS => 'amenity=pub' ),
-#			array( TAGS => 'amenity=bar' )
-					array( TAGS => 'amenity=restaurant' )
-				) ),
-			)
-		) );
-		$s = $res['result'];
 		break;
 
 	case 'withinbox': /* WITHIN box: */

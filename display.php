@@ -29,7 +29,7 @@ function format_response( $s, $showCheckIn )
 				} else {
 					$content .= "<br/>{$tagName}: {$value}\n";
 				}   
-				if ( in_array( $tagName, array( 'amenity', 'leisure' ) ) )
+				if ( in_array( $tagName, array( 'amenity', 'leisure', 'real_ale', 'real_cider' ) ) )
 				{       
 					$classes[] = preg_replace( '/[^a-z0-9]/', '', $tagName . $value );
 				}           
