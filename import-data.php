@@ -76,8 +76,14 @@ while ($z->name === 'node') {
 	}
 }
 
-$collection->batchInsert( $collectionItems, array( 'continueOnError' => true ) );
-$cache->batchInsert( $cacheItems, array( 'continueOnError' => true ) );
+if ( count( $collectionItems ) )
+{
+	$collection->batchInsert( $collectionItems, array( 'continueOnError' => true ) );
+}
+if ( count( $cacheItems ) )
+{
+	$cache->batchInsert( $cacheItems, array( 'continueOnError' => true ) );
+}
 echo "\n";
 
 /* Parse the ways */
