@@ -29,7 +29,12 @@ $res = $c->aggregate( array(
 		) ),
 	)
 ) );
-$s = $res['result'];
+
+$s = array();
+if ( array_key_exists( 'result', $res ) )
+{
+	$s = $res['result'];
+}
 
 $rets = format_response( $s, false );
 
