@@ -99,11 +99,23 @@ else
 			) ),
 		),
 		'ts' => array(
-			sprintf( "TZID=UTC%s%d", $sign, abs($offset) )
+			sprintf( "TZID=Etc/GMT%s%d", $sign, abs($offset) )
 		),
 	);
 }
 
-$rets = format_response( $s, false );
+$r = array();
+
+foreach ( $s as $record )
+{
+	$tz = new DateTimeZone( substr( $record['ts'][0], 5 ) );
+	$d = new DateTime();
+	$d->setTimezone( $tz );
+	$record['ts'][] = 'Time=' . $d->format('Y-m-d H:i:s T (O)');
+
+	$r[] = $record;
+}
+
+$rets = format_response( $r, false );
 
 echo json_encode( $rets, JSON_PRETTY_PRINT );
