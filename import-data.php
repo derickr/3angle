@@ -26,7 +26,7 @@ $cache->drop();
 
 /* Parse the nodes */
 $z = new XMLReader();
-$z->open( $argv[1]);
+$z->open($file);
 while ($z->read() && $z->name !== 'node' );
 $count = 0;
 $collection->remove( array( TYPE => 1 ), array( 'timeout' => 1800000 ) );
@@ -59,7 +59,7 @@ while ($z->name === 'node') {
 		}
 	}
 
-	$cacheItems[] = array( '_id' => (int) $node['id'], 'l' => array( (float) $node['lon'], (float) $node['lat'] ) );
+	$cacheItems[] = array( '_id' => (int) $node['id'], LOC => array( (float) $node['lon'], (float) $node['lat'] ) );
 	if ( count( $cacheItems ) >= 10000 )
 	{
 		$cache->batchInsert( $cacheItems, array( 'continueOnError' => true ) );
@@ -82,7 +82,7 @@ echo "\n";
 
 /* Parse the ways */
 $z = new XMLReader();
-$z->open( $argv[1]);
+$z->open($file);
 while ($z->read() && $z->name !== 'way' );
 $count = 0;
 $collection->remove( array( TYPE => 2 ), array( 'timeout' => 1800000 ) );
@@ -141,7 +141,7 @@ echo "\n";
 
 /* Parse the relations */
 $z = new XMLReader();
-$z->open( $argv[1]);
+$z->open($file);
 while ($z->read() && $z->name !== 'relation' );
 $count = 0;
 $collection->remove( array( TYPE => 3 ), array( 'timeout' => 1800000 ) );
