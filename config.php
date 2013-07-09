@@ -27,6 +27,10 @@ $layers = [
 	'Timezone' => [
 		'directory' => 'maps-timezone',
 		'layerName' => 'timezone',
-	]
+	],
+	'Timezone (All)' => [
+		'directory' => 'maps-all-zones',
+		'layerName' => 'timezones',
+	],
 ];
 ?>

@@ -157,7 +157,10 @@ echo join( ", ", $includeLayers ), "\n";
 <?php
 foreach ( $layers as $layerName => $info )
 {
-	include "{$info['directory']}/layer-action.js";
+	if ( file_exists( "{$info['directory']}/layer-action.js" ) )
+	{
+		include "{$info['directory']}/layer-action.js";
+	}
 }
 ?>
 		}
