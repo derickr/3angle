@@ -87,7 +87,7 @@ distance( $n, $e, $s, $e, $d );
 var_dump( $n, $e, $s, $e, $d );
 die();
 */
-define(SEGMENTS, array_key_exists('segments', $_GET) ? (int) $_GET['segments'] : 1);
+define('SEGMENTS', array_key_exists('segments', $_GET) ? (int) $_GET['segments'] : 1);
 
 for ($j = 0; $j < SEGMENTS; $j++ )
 {
