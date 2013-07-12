@@ -11,12 +11,14 @@ ini_set('error_reporting', -1);
 header('Content-type: text/plain');
 $m = new MongoClient( 'mongodb://localhost' );
 $d = $m->selectDb( DATABASE );
-$c = $d->selectCollection( COLLECTION );
+$segments = array_key_exists('segments', $_GET) ? (int) $_GET['segments'] : 1;
+
 $polygon = GeoJSONPolygon::createFromBounds(
 	min( 90, (float) $_GET['n'] ),
 	min( 180, (float) $_GET['e']) ,
 	max( -90, (float) $_GET['s'] ),
-	max( -180, (float) $_GET['w'] )
+	max( -180, (float) $_GET['w'] ),
+	$segments
 );
 
 $c = $d->selectCollection( 'flickr' );

@@ -55,16 +55,24 @@ class GeoJSONPolygon
 		return $geo;
 	}
 
-	static function createFromBounds( $n, $e, $s, $w )
+	static function createFromBounds( $n, $e, $s, $w, $segments = 1 )
 	{
-		$coordiates = [
-			[ $e, $n ],
-			[ $w, $n ],
-			[ $w, $s ],
-			[ $e, $s ],
-			[ $e, $n ],
-		];
-		return new GeoJSONPolygon( [ $coordiates ] );
+		$coordinates = [];
+
+		/* West to East, North side */
+		for ($j = 0; $j <= $segments; $j++ )
+		{
+			$coordinates[] = [ $w + (($e-$w)/$segments*$j), $n ];
+		}
+		/* East to West, South side */
+		for ($j = $segments; $j >= 0; $j-- )
+		{
+			$coordinates[] = [ $w + (($e-$w)/$segments*$j), $s ];
+		}
+		/* North West corner to tie it up */
+		$coordinates[] = [ $w, $n ];
+
+		return new GeoJSONPolygon( [ $coordinates ] );
 	}
 }
 ?>

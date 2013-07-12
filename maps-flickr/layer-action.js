@@ -1,6 +1,13 @@
+<?php
+$s = '';
+if (array_key_exists( 'gc_segments', $_GET ) ) {
+	$segments = (int) $_GET['gc_segments'];
+	$s = " + '&segments={$segments}'";
+}
+?>
 if (map.hasLayer( flickrLayer )) {
 	$.ajax({
-		url: "maps-flickr/fetch-poi.php" + '?n=' + bounds.getNorthEast().lat + '&e=' + bounds.getNorthEast().lng + '&s=' + bounds.getSouthWest().lat + '&w=' + bounds.getSouthWest().lng,
+		url: "maps-flickr/fetch-poi.php" + '?n=' + bounds.getNorthEast().lat + '&e=' + bounds.getNorthEast().lng + '&s=' + bounds.getSouthWest().lat + '&w=' + bounds.getSouthWest().lng<?php echo $s; ?>,
 		beforeSend: function ( xhr ) {
 			xhr.overrideMimeType("text/plain; charset=x-user-defined");
 		}

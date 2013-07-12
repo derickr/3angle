@@ -87,14 +87,19 @@ distance( $n, $e, $s, $e, $d );
 var_dump( $n, $e, $s, $e, $d );
 die();
 */
-$coordinates = [];
-for ( $i = 0; $i < 1; $i += 0.1 )
-{
-	getPoint( $s, $w, $s, $e, $i, $lat, $lon );
+define(SEGMENTS, array_key_exists('segments', $_GET) ? (int) $_GET['segments'] : 1);
 
-	$coordinates[] = [ rad2deg($lon), rad2deg($lat) ];
+for ($j = 0; $j < SEGMENTS; $j++ )
+{
+	$coordinates = [];
+	for ( $i = 0; $i < 1; $i += 0.1 )
+	{
+		getPoint( $s, $w + (($e-$w)/SEGMENTS*$j), $s, $w + (($e-$w)/SEGMENTS*(1+$j)), $i, $lat, $lon );
+
+		$coordinates[] = [ rad2deg($lon), rad2deg($lat) ];
+	}
+	$rets[] = [ 'l' => [ 'type' => 'LineString', 'coordinates' => $coordinates, ], ];
 }
-$rets[] = [ 'l' => [ 'type' => 'LineString', 'coordinates' => $coordinates, ], ];
 
 $coordinates = [];
 for ( $i = 0; $i < 1; $i += 0.1 )
@@ -105,14 +110,17 @@ for ( $i = 0; $i < 1; $i += 0.1 )
 }
 $rets[] = [ 'l' => [ 'type' => 'LineString', 'coordinates' => $coordinates, ], ];
 
-$coordinates = [];
-for ( $i = 0; $i < 1; $i += 0.1 )
+for ($j = 0; $j < SEGMENTS; $j++ )
 {
-	getPoint( $n, $e, $n, $w, $i, $lat, $lon );
+	$coordinates = [];
+	for ( $i = 0; $i < 1; $i += 0.1 )
+	{
+		getPoint( $n, $w + (($e-$w)/SEGMENTS*$j), $n, $w + (($e-$w)/SEGMENTS*(1+$j)), $i, $lat, $lon );
 
-	$coordinates[] = [ rad2deg($lon), rad2deg($lat) ];
+		$coordinates[] = [ rad2deg($lon), rad2deg($lat) ];
+	}
+	$rets[] = [ 'l' => [ 'type' => 'LineString', 'coordinates' => $coordinates, ], ];
 }
-$rets[] = [ 'l' => [ 'type' => 'LineString', 'coordinates' => $coordinates, ], ];
 
 $coordinates = [];
 for ( $i = 0; $i < 1; $i += 0.1 )
