@@ -3,6 +3,8 @@ include '../config.php';
 include '../classes.php';
 include '../display.php';
 
+ob_start("ob_gzhandler");
+
 ini_set('display_errors', 1);
 ini_set('error_reporting', -1);
 

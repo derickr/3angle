@@ -3,6 +3,8 @@ include '../config.php';
 include '../classes.php';
 include '../display.php';
 
+ob_start("ob_gzhandler");
+
 header('Content-type: text/plain');
 
 ini_set('html_errors', 0);
