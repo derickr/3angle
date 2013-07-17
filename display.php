@@ -17,15 +17,14 @@ function format_response( $s, $showCheckIn )
 			$name = $content = ''; $image = false;
 			$classes = array();
 			foreach ( $o[TAGS] as $tagName => $value ) {
-				list( $tagName, $value ) = explode( '=', $value );
+				list( $tagName, $value ) = explode( '=', $value, 2 );
 				if ( $tagName == 'name' ) {
 					$name = $value;
 				} else if ( $tagName == 'title' ) {
 					$name = $value; 
 				} else if ( $tagName == 'thumb_url' ) { 
-					$ret['properties']['thumbUrl'] = $value;
-	//          } else if ( $tagName == 'thumb_url' ) {
-					$image = $value;
+					$ret['properties']['thumbUrl'] = preg_replace( '/_q\.jpg$/', '_s.jpg', $value );
+					$image = preg_replace( '/_q\.jpg$/', '_m.jpg', $value );
 				} else {
 					$content .= "<br/>{$tagName}: {$value}\n";
 				}   
@@ -35,7 +34,7 @@ function format_response( $s, $showCheckIn )
 				}           
 			} 
 			if ($image) {   
-				$content = "<br/><div style='width: 150px'><img src='{$image}'/></div>";
+				$content = "<br/><div style='width: 240px'><img src='{$image}'/></div>";
 			}
 			else if ( $showCheckIn )
 			{

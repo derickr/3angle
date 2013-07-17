@@ -106,14 +106,19 @@ else
 	);
 }
 
+$s = $tzc->find();
+
 $r = array();
 
 foreach ( $s as $record )
 {
-	$tz = new DateTimeZone( substr( $record['ts'][0], 5 ) );
-	$d = new DateTime();
-	$d->setTimezone( $tz );
-	$record['ts'][] = 'Time=' . $d->format('Y-m-d H:i:s T (O)');
+	if ( isset( $record['ts'] ) )
+	{
+		$tz = new DateTimeZone( substr( $record['ts'][0], 5 ) );
+		$d = new DateTime();
+		$d->setTimezone( $tz );
+		$record['ts'][] = 'Time=' . $d->format('Y-m-d H:i:s T (O)');
+	}
 
 	$r[] = $record;
 }

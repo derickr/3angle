@@ -12,6 +12,10 @@ $layers = [
 		'directory' => 'maps-5pubs',
 		'layerName' => 'fivepubs',
 	],
+	'Events' => [
+		'directory' => 'maps-events',
+		'layerName' => 'events',
+	],
 	'Flickr' => [
 		'directory' => 'maps-flickr',
 		'layerName' => 'flickr',
