@@ -3,19 +3,29 @@ class RDP
 {
 	static function simplify( $points, $epsilon )
 	{
-		$firstPoint = $points[0];
-		$lastPoint = $points[ sizeof( $points ) - 1 ];
+		self::simplifyInternal( $points, $epsilon, 0, sizeof( $points ) - 1 );
+		return array_merge( $points );
+	}
 
-		if ( sizeof( $points ) < 3 )
+	static private function simplifyInternal( &$points, $epsilon, $start, $end )
+	{
+		$firstPoint = $points[$start];
+		$lastPoint = $points[$end];
+
+		if ( $end - $start < 2 )
 		{
-			return $points;
+			return;
 		}
 
 		$index = -1;
 		$dist  = 0;
 
-		for ( $i = 1; $i < sizeof( $points ) - 1; $i++ )
+		for ( $i = $start + 1; $i < $end; $i++ )
 		{
+			if ( !isset( $points[$i] ) )
+			{
+				continue;
+			}
 			$cDist = self::findPerpendicularDistance( $points[ $i ], $firstPoint, $lastPoint );
 			if ( $cDist > $dist )
 			{
@@ -26,18 +36,18 @@ class RDP
 
 		if ( $dist > $epsilon )
 		{
-			$l1 = array_slice( $points, 0, $index + 1 );
-			$l2 = array_slice( $points, $index );
-			$r1 = self::simplify( $l1, $epsilon );
-			$r2 = self::simplify( $l2, $epsilon );
+			self::simplifyInternal( $points, $epsilon, $start, $index );
+			self::simplifyInternal( $points, $epsilon, $index, $end );
 
-			$rs = array_slice( $r1, 0, sizeof( $r1 ) - 1 );
-			$rs = array_merge( $rs, $r2 );
-			return $rs;
+			return;
 		}
 		else
 		{
-			return array( $firstPoint, $lastPoint );
+			for ( $i = $start + 1; $i < $end; $i++ )
+			{
+				unset( $points[$i] );
+			}
+			return;
 		}
 	}
 
