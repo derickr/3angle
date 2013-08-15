@@ -4,7 +4,7 @@ define( 'LOC', 'l');
 
 ob_start("ob_gzhandler");  
 
-include '/home/derick/dev/osm/mongo/3angle/display.php';
+include '../display.php';
 
 $location = $_GET['location'];
 //$location = 'London, United Kingdom';

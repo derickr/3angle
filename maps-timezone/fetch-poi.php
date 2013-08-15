@@ -2,13 +2,16 @@
 include '../config.php';
 include '../classes.php';
 include '../display.php';
+include '../rdp.php';
 
-ob_start("ob_gzhandler");
+//ob_start("ob_gzhandler");
 
 ini_set('display_errors', 1);
 ini_set('error_reporting', -1);
+ini_set('memory_limit', -1);
+ini_set('xdebug.var_display_max_depth', 8);
 
-header('Content-type: text/plain');
+//header('Content-type: text/plain');
 $m = new MongoClient( 'mongodb://localhost' );
 $d = $m->selectDb( DATABASE );
 $c = $d->selectCollection( COLLECTION );
@@ -120,7 +123,22 @@ foreach ( $s as $record )
 		$record['ts'][] = 'Time=' . $d->format('Y-m-d H:i:s T (O)');
 	}
 
-	$r[] = $record;
+	if ( $record[LOC]['type'] == 'Polygon' )
+	{
+		$newPolygonRounds = [];
+		$newRecord = $record;
+
+		foreach ( $record[LOC]['coordinates'] as $idx => $round )
+		{
+			$newPoints = RDP::Simplify( $record[LOC]['coordinates'][$idx], 0.04 );
+			$newRecord[LOC]['coordinates'][$idx] = $newPoints;
+		}
+		$r[] = $newRecord;
+	}
+	else
+	{
+		$r[] = $record;
+	}
 }
 
 $rets = format_response( $r, false );

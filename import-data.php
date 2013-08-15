@@ -145,6 +145,8 @@ while ($z->name === 'way') {
 }
 echo "\n";
 
+relations_only:
+
 /* Parse the relations */
 $z = new XMLReader();
 $z->open($file);
@@ -194,6 +196,9 @@ nextrel:
 }
 echo "\n";
 
+norelations:
+
+
 function fetchLocationsForNodes( $cache, $nodeIds )
 {
 	$locations = $tmp = array();
@@ -240,6 +245,7 @@ function fetchLocations($collection, &$q, $node, $locationCache )
 	{
 		$geo = new GeoJSONLineString( $locations );
 	}
+
 	$q[LOC] = $geo->getGeoJSON();
 }
 
