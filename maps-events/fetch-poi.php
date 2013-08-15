@@ -54,7 +54,10 @@ function fetchMeetup( &$docs, $lon, $lat )
 
 		$doc['when']['start'] = strtotime( "@" . $event->time / 1000 );
 		$doc['url'] = $event->event_url;
-		$doc['venue'] = $event->venue;
+		if ( ! isset( $event->venue ) )
+		{
+			continue;
+		}
 		$doc['l'] = [ 'type' => 'Point', 'coordinates' => [ $event->venue->lon, $event->venue->lat ] ] ;
 
 		foreach ( array( 'name', 'description', 'url' ) as $name )
@@ -85,17 +88,18 @@ function fetchEventBrite( &$docs, $lon, $lat )
 	
 		$event = $event->event;
 
-		if ( ! preg_match( '/\bmongo(db)?\b/i', $doc['description'] ) )
-		{
-			continue;
-		}
-
 		$doc = [];
 		$doc['id'] = $event->id;
 		$doc['name'] = $event->title;
 		$doc['description'] = substr( strip_tags( $event->description ), 0, 500 );
 		$doc['when']['start'] = strtotime( $event->start_date );
 		$doc['when']['end']   = strtotime( $event->end_date );
+
+		if ( ! preg_match( '/\bmongo(db)?\b/i', $doc['description'] ) )
+		{
+			continue;
+		}
+
 		$doc['url'] = $event->url;
 		$doc['venue'] = $event->venue;
 		$doc['l'] = [ 'type' => 'Point', 'coordinates' => [ $event->venue->lon, $event->venue->lat ] ] ;
