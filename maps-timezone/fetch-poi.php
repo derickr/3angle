@@ -8,10 +8,9 @@ include '../rdp.php';
 
 ini_set('display_errors', 1);
 ini_set('error_reporting', -1);
-ini_set('memory_limit', -1);
 ini_set('xdebug.var_display_max_depth', 8);
 
-//header('Content-type: text/plain');
+header('Content-type: text/plain');
 $m = new MongoClient( 'mongodb://localhost' );
 $d = $m->selectDb( DATABASE );
 $c = $d->selectCollection( COLLECTION );
@@ -108,8 +107,6 @@ else
 		),
 	);
 }
-
-$s = $tzc->find();
 
 $r = array();
 
