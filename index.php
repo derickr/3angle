@@ -36,15 +36,14 @@ body {
 html, body, #map {
     height: 100%;
 }
-#search {
+#info {
 	z-index: 1000;
 	position: absolute;
-	top: 10px;
-	right: 30px;
-	width: 250px;
-	background-color: white;
-	border: 1px solid black;
-	padding: 4px;
+	bottom: 25px;
+	left: 30px;
+}
+#flickrInfo {
+	background-color: rgba(255,255,255,0.5);
 }
 div.markerName {
 	text-align: center;
@@ -74,12 +73,31 @@ div.leisurepark {
 
 <body onLoad="changeLocation(false);">
 	<div id="map"></div>
+	<div id="info">
+<?php
+foreach ( $layers as $layerName => $info )
+{
+	if ( file_exists( "{$info['directory']}/info-box.html" ) )
+	{
+		include "{$info['directory']}/info-box.html";
+	}
+}
+?>
+	</div>
 
 	<script type="text/javascript" src="leaflet.js"></script>
 	<script type="text/javascript" src="jquery-1.7.2.min.js"></script>
 	<script type="text/javascript" src="Leaflet.markercluster/dist/leaflet.markercluster.js"></script>
 
 	<script>
+		$.urlParam = function(name){
+			var results = new RegExp('[\\?&#]' + name + '=([^&]*)').exec(window.location.hash);
+			if (results) {
+				return results[1];
+			}
+			return false;
+		}
+
 		var map = new L.Map('map');
 		var disabledRefetch;
 

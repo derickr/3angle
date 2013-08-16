@@ -8,4 +8,13 @@ var flickrLayerOptions = {
 		layer.bindPopup(feature.properties.popupContent);
 	}
 }
+function flickrChangeSet(e) {
+	var set = ""
+	var selected = $("#flickrSet option:selected").each(function () {
+		set += $(this).text() + " ";
+	});
+	window.location.hash = "fs=" + set;
+	changeLocation();
+}
 var flickrLayer = new L.GeoJSON(null, flickrLayerOptions);
+$("#flickrSet").attr("onchange", "flickrChangeSet()");

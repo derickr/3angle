@@ -12,6 +12,7 @@ header('Content-type: text/plain');
 $m = new MongoClient( 'mongodb://localhost' );
 $d = $m->selectDb( DATABASE );
 $segments = array_key_exists('segments', $_GET) ? (int) $_GET['segments'] : 1;
+$set = array_key_exists('set', $_GET) ? (string) $_GET['set'] : false;
 
 $polygon = GeoJSONPolygon::createFromBounds(
 	min( 90, (float) $_GET['n'] ),
@@ -29,6 +30,9 @@ $query = array(
 		),
 	),
 );
+if ($set) {
+	$query['sets'] = $set;
+}
 $s = $c->find( $query )->limit( 8000 );
 
 $rets = format_response( $s, false );
