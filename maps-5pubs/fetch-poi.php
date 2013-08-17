@@ -18,8 +18,8 @@ $query = array(
 	LOC => array(
 		'$near' => array(
 			'$geometry' => $center->getGeoJSON(),
-			'$maxDistance' => 2500
 		),
+		'$maxDistance' => 2500
 	),
 	TAGS => 'amenity=pub',
 );
