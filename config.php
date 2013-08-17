@@ -20,6 +20,10 @@ $layers = [
 		'directory' => 'maps-flickr',
 		'layerName' => 'flickr',
 	],
+	'Foursquare' => [
+		'directory' => 'maps-4sq',
+		'layerName' => 'foursquare',
+	],
 	'Great Circle' => [
 		'directory' => 'maps-great-circle',
 		'layerName' => 'gc',
