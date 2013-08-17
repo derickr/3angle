@@ -14,7 +14,7 @@ else
 }
 
 /* Connect, empty the collection and create indexes */
-$m = new MongoClient( 'mongodb://localhost:27017/?w=0' );
+$m = new MongoClient( 'mongodb://localhost:27017/?w=1' );
 $collection = $m->selectCollection( DATABASE, $collection );
 $collection->drop();
 $collection->ensureIndex( array( TYPE => 1 ) );
@@ -124,15 +124,15 @@ while ($z->name === 'way') {
 
 			$qs[] = $q;
 		}
-	}
 
-	try
-	{
-		$collection->batchInsert( $qs, array( 'continueOnError' => 1 ) );
-	}
-	catch ( MongoCursorException $e )
-	{
-		echo "\n", $q['_id'], ': ', $e->getMessage(), "\n";
+		try
+		{
+			$collection->batchInsert( $qs, array( 'continueOnError' => 1 ) );
+		}
+		catch ( MongoCursorException $e )
+		{
+			echo "\n", $q['_id'], ': ', $e->getMessage(), "\n";
+		}
 	}
 
 	$count += count($ways);
