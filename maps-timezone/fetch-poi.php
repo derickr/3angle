@@ -127,7 +127,14 @@ foreach ( $s as $record )
 
 		foreach ( $record[LOC]['coordinates'] as $idx => $round )
 		{
-			$newPoints = RDP::Simplify( $record[LOC]['coordinates'][$idx], 0.04 );
+			if ( function_exists( 'rdp_simplify' ) )
+			{
+				$newPoints = rdp_simplify( $record[LOC]['coordinates'][$idx], 0.04 );
+			}
+			else
+			{
+				$newPoints = RDP::Simplify( $record[LOC]['coordinates'][$idx], 0.04 );
+			}
 			$newRecord[LOC]['coordinates'][$idx] = $newPoints;
 		}
 		$r[] = $newRecord;
