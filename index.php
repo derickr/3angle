@@ -103,7 +103,7 @@ foreach ( $layers as $layerName => $info )
 
 		var OpenStreetMapUrl = 'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
 			OpenStreetMapAttribution = 'Map data &copy; 2013 OpenStreetMap contributors',
-			OpenStreetMap = new L.TileLayer(OpenStreetMapUrl, {maxZoom: 18, attribution: OpenStreetMapAttribution, opacity: 0.7});
+			OpenStreetMap = new L.TileLayer(OpenStreetMapUrl, {maxZoom: 19, attribution: OpenStreetMapAttribution, opacity: 0.7});
 
 		map.setView(new L.LatLng(<?php echo $lat; ?>, <?php echo $lon; ?>), <?php echo $zoom; ?>).addLayer(OpenStreetMap); 
 
