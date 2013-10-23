@@ -68,7 +68,7 @@ div.leisurepark {
 
 	<link rel="stylesheet" href="leaflet.css" />
 	<!--[if lte IE 8]><link rel="stylesheet" href="leaflet.ie.css" /><![endif]-->
-	<link rel="stylesheet" href="Leaflet.markercluster/dist/MarkerCluster.Default.css" />
+	<link rel="stylesheet" href="Leaflet.markercluster/MarkerCluster.Default.css" />
 </head>
 
 <body onLoad="changeLocation(false);">
@@ -87,7 +87,7 @@ foreach ( $layers as $layerName => $info )
 
 	<script type="text/javascript" src="leaflet.js"></script>
 	<script type="text/javascript" src="jquery-1.7.2.min.js"></script>
-	<script type="text/javascript" src="Leaflet.markercluster/dist/leaflet.markercluster.js"></script>
+	<script type="text/javascript" src="Leaflet.markercluster/leaflet.markercluster.js"></script>
 
 	<script>
 		$.urlParam = function(name){
