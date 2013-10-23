@@ -8,6 +8,10 @@ define( 'TAGS', 'ts' );
 define( 'META', 'm' );
 
 $layers = [
+	'3angle' => [
+		'directory' => 'maps-3angle',
+		'layerName' => 'threeangle',
+	],
 	'5 Pubs' => [
 		'directory' => 'maps-5pubs',
 		'layerName' => 'fivepubs',

@@ -125,15 +125,17 @@ foreach ( $s as $record )
 		$newPolygonRounds = [];
 		$newRecord = $record;
 
+		$limit = 0.01;
+
 		foreach ( $record[LOC]['coordinates'] as $idx => $round )
 		{
 			if ( function_exists( 'rdp_simplify' ) )
 			{
-				$newPoints = rdp_simplify( $record[LOC]['coordinates'][$idx], 0.04 );
+				$newPoints = rdp_simplify( $record[LOC]['coordinates'][$idx], $limit );
 			}
 			else
 			{
-				$newPoints = RDP::Simplify( $record[LOC]['coordinates'][$idx], 0.04 );
+				$newPoints = RDP::Simplify( $record[LOC]['coordinates'][$idx], $limit );
 			}
 			$newRecord[LOC]['coordinates'][$idx] = $newPoints;
 		}

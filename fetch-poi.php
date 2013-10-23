@@ -265,7 +265,7 @@ foreach( $s as $o )
 		if ($image) {
 			$content = "<br/><div style='width: 150px'><img src='{$image}'/></div>";
 		} else {
-			$content .= "<br/><form action='checkin.php' method='post'><input type='hidden' name='object' value='{$o['_id']}'/><input type='submit' value='check in'/></form>";
+			$content .= "<br/><form action='maps-3checkin.php' method='post'><input type='hidden' name='object' value='{$o['_id']}'/><input type='submit' value='check in'/></form>";
 		}
 		$ret['properties']['name'] = $name;
 		if ( isset( $o['distance'] ) )

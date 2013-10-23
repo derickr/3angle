@@ -1,5 +1,5 @@
 <?php
-include 'config.php';
+include '../config.php';
 
 class Functions
 {
@@ -114,13 +114,14 @@ class Triangle
 
 			if ( in_array( $amenity, array( 'restaurant' ) ) )
 			{
-				$this->add_field( 'cuisine', 'listCuisine' );
+				$this->add_field( 'cuisine', 'listUsage' );
 			}
 			if ( in_array( $amenity, array( 'pub', 'bar' ) ) )
 			{
 				$this->add_field( 'real_ale', 'boolean' );
 				$this->add_field( 'real_cider', 'boolean' );
 			}
+			$this->add_field( 'wheelchair', 'listUsage' );
 		}
 
 		/* Add the rest of the fields */
@@ -136,33 +137,21 @@ class Triangle
 		$this->add_addres_fields();
 	}
 
-	private function get_cuisines()
+	private function get_usage( $name )
 	{
-		$allWithCuisine = array(
-			'$match' => array( TAGS => new MongoRegex( '/^cuisine=[a-z_-]+$/' ) )
-		);
-		$justTheTags = array(
-			'$project' => array( TAGS => 1 )
-		);
-		$unwindTags = array(
-			'$unwind' => '$' . TAGS
-		);
-		$groupByTags = array(
-			'$group' => array(
+		$pipeline = array(
+			array( '$match' => array( TAGS => new MongoRegex( "/^{$name}=/" ) ) ),
+			array( '$project' => array( TAGS => 1 ) ),
+			array( '$unwind' => '$' . TAGS ),
+			array( '$match' => array( TAGS => new MongoRegex( "/^{$name}=/" ) ) ),
+			array( '$group' => array(
 				'_id' => '$' . TAGS,
 				'count' => array( '$sum' => 1 ),
-			)
-		);
-		$sort = array(
-			'$sort' => array( '_id' => 1 )
+			) ),
+			array( '$sort' => array( '_id' => 1 ) )
 		);
 
-		$result = $this->c->aggregate(
-			array(
-				$allWithCuisine, $justTheTags, $unwindTags, $allWithCuisine,
-				$groupByTags, $sort,
-			)
-		);
+		$result = $this->c->aggregate( $pipeline );
 
 		$cuisines = array();
 		foreach ( $result['result'] as $item )
@@ -173,38 +162,32 @@ class Triangle
 		return $cuisines;
 	}
 
+	private static function approve( $name )
+	{
+		$ret = '';
+		$ret .= "<td><b>Approve:</b><br/> \n";
+		$ret .= "<input type='radio' name='approve_{$name}' value='0'>don't know<br/>\n";
+		$ret .= "<input type='radio' name='approve_{$name}' value='-1'>no<br/>\n";
+		$ret .= "<input type='radio' name='approve_{$name}' value='1'>yes<br/>\n";
+		$ret .= "</td>\n";
+		return $ret;
+	}
+
 	private static function static_widget( $name, $value )
 	{
 		return "<tr><td>$name</td><td>{$value}</td></tr>\n";
 	}
 
-	private static function freeform_widget( $name, $value, $suggestions )
+	private static function freeform_widget( $name, $value, $suggestion )
 	{
-		if ( $suggestions )
+		if ( $suggestion )
 		{
-			if ( !in_array( "«delete»", $suggestions ) && $value !== '' )
-			{
-				array_unshift( $suggestions, "«delete»" );
-			}
-			array_unshift( $suggestions, $value );
-			$ret = "<tr><td>$name</td><td>";
-			$ret .= "Current:<br/>{$value}<br/>Suggestions:<br/>\n";
-			$ret .= "<select name='{$name}'>\n";
-			foreach ( $suggestions as $s )
-			{
-				if ( $value == $s )
-				{
-					$ret .= "\t<option selected='selected' value='{$s}'>{$s}</option>\n";
-				}
-				else
-				{
-					$ret .= "\t<option value='{$s}'>{$s}</option>\n";
-				}
-			}
-			$ret .= "</select><br/>\n";
-			$ret .= "New suggestion:<br/><input type='text' name='{$name}_n'>\n";
-			$ret .= "</td></tr>\n";
-//			return "<tr><td>$name</td><td><input type='text' name='{$name}' value='{$value}'></td></tr>\n";
+			$ret = "<tr><th>$name</th><td>";
+			$ret .= "<b>Current:</b><br/>{$value}<br/>";
+			$ret .= "<b>Suggestion:</b><br/>{$suggestion}<br/>";
+			$ret .= "</td>";
+			$ret .= self::approve( $name );
+			$ret .= "</tr>\n";
 			return $ret;
 		}
 		else
@@ -213,7 +196,39 @@ class Triangle
 		}
 	}
 
-	private function create_widget( $type, $name, $initValue, $suggestions)
+	private static function boolean_widget( $name, $value, $suggestion )
+	{
+		$yes = $no = '';
+		if ( $value == 'yes' )
+		{
+			$yes = "selected='selected' ";
+		}
+		if ( $value == 'no' )
+		{
+			$no = "selected='selected' ";
+		}
+		$ret = "<tr><td>$name</td><td><select name='{$name}'>";
+		$ret .= "<option value=''>«unknown»</option>\n";
+		$ret .= "<option {$yes}value='1'>yes</option>\n";
+		$ret .= "<option {$no}value='0'>no</option>\n";
+		$ret .= "</select></td></tr>\n";
+		return $ret;
+	}
+
+	private function usage_widget( $name, $value, $suggestion )
+	{
+		$ret = "<tr><td>$name</td><td><select name='{$name}'>";
+		$ret .= "<option value='0'>«none set»</option>\n";
+		foreach ( $this->get_usage( $name ) as $item )
+		{
+			$selected = $value == $item ? ' selected="selected"' : '';
+			$ret .= "<option value='{$item}'{$selected}>{$item}</option>\n";
+		}
+		$ret .= "</select></td></tr>\n";
+		return $ret;
+	}
+
+	private function create_widget( $type, $name, $initValue, $suggestion )
 	{
 		$value = isset( $initValue[2] ) ? $initValue[2] : '';
 		switch ( $type )
@@ -222,26 +237,13 @@ class Triangle
 				return self::static_widget( $name, $value );
 
 			case 'boolean':
-				$ret = "<tr><td>$name</td><td><select name='{$name}'>";
-				$ret .= "<option value=''>«unknown»</option>\n";
-				$ret .= "<option value='1'>yes</option>\n";
-				$ret .= "<option value='0'>no</option>\n";
-				$ret .= "</select></td></tr>\n";
-				return $ret;
+				return self::boolean_widget( $name, $value, $suggestion );
 
 			case 'freeform':
-				return self::freeform_widget( $name, $value, $suggestions );
+				return self::freeform_widget( $name, $value, $suggestion );
 
-			case 'listCuisine':
-				$ret = "<tr><td>$name</td><td><select name='{$name}'>";
-				$ret .= "<option value='0'>«none set»</option>\n";
-				foreach ( $this->get_cuisines() as $cuisine )
-				{
-					$selected = $value == $cuisine ? ' selected="selected"' : '';
-					$ret .= "<option value='{$cuisine}'{$selected}>{$cuisine}</option>\n";
-				}
-				$ret .= "</select></td></tr>\n";
-				return $ret;
+			case 'listUsage':
+				return $this->usage_widget( $name, $value, $suggestion );
 
 		}
 	}
@@ -254,11 +256,12 @@ class Triangle
 			array( '$sort' => array( 'key' => 1, 'value' => 1 ) ),
 			array( '$group' => array( '_id' => '$key', 'items' => array( '$push' => '$value' ) ) ),
 		) );
+		$r = $this->sc->find( array( 'id' => $this->o['_id'] ) );
 
-		$suggestions = array();
-		foreach ( $r['result'] as $kp )
+		$suggestion = array();
+		foreach ( $r as $result )
 		{
-			$suggestions[$kp['_id']] = $kp['items'];
+			$suggestion[$result['key']] = $result['value'];
 		}
 
 		$ret = '';
@@ -267,7 +270,7 @@ class Triangle
 		$ret .= '<table>';
 		foreach ( $this->fields as $name => $value )
 		{
-			$ret .= $this->create_widget( $value[1], $name, $value, array_key_exists( $name, $suggestions ) ? $suggestions[$name] : false );
+			$ret .= $this->create_widget( $value[1], $name, $value, array_key_exists( $name, $suggestion ) ? $suggestion[$name] : false );
 		}
 		$ret .= "<tr><td colspan='2'><input type='submit' name='checkin' value='check in'></td></tr>\n";
 		$ret .= '</table>';
@@ -306,17 +309,17 @@ class Triangle
 			{
 				if ( $this->tags[$key] == $value )
 				{
-					echo "Value for $key is the same: $value<br/>\n";
+//					echo "Value for $key is the same: $value<br/>\n";
 				}
 				else
 				{
-					echo "Value for $key is changed from {$this->tags[$key]} to {$value}<br/>\n";
+//					echo "Value for $key is changed from {$this->tags[$key]} to {$value}<br/>\n";
 					$this->doSuggestion( $this->o['_id'], $key, $value );
 				}
 			}
 			else
 			{
-				echo "Key $key is new with value {$value}<br/>\n";
+//				echo "Key $key is new with value {$value}<br/>\n";
 				$this->doSuggestion( $this->o['_id'], $key, $value );
 			}
 		}

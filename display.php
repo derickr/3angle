@@ -38,7 +38,7 @@ function format_response( $s, $showCheckIn )
 			}
 			else if ( $showCheckIn )
 			{
-				$content .= "<br/><form action='checkin.php' method='post'><input type='hidden' name='object' value='{$o['_id']}'/><input type='submit' value='check in'/></form>";
+				$content .= "<br/><form action='maps-3angle/checkin.php' method='post'><input type='hidden' name='object' value='{$o['_id']}'/><input type='submit' value='check in'/></form>";
 			}       
 			$ret['properties']['name'] = $name;
 			if ( isset( $o['distance'] ) )
@@ -47,6 +47,11 @@ function format_response( $s, $showCheckIn )
 			}
 			$ret['properties']['classes'] = join( ' ', $classes );
 			$ret['properties']['popupContent'] = "<b>{$name}</b>" . $content;
+
+			if ( array_key_exists( 'score', $o ) )
+			{
+				$ret['properties']['score'] = $o['score'];
+			}
 		}
 
 		$ret['geometry'] = $o[LOC];
