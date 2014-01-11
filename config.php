@@ -32,6 +32,10 @@ $layers = [
 		'directory' => 'maps-great-circle',
 		'layerName' => 'gc',
 	],
+	'Postbox' => [
+		'directory' => 'maps-postbox',
+		'layerName' => 'postbox',
+	],
 	'Real Cider/Real Ale' => [
 		'directory' => 'maps-pubs-aggregation',
 		'layerName' => 'pubsaggr',
