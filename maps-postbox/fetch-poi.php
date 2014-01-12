@@ -2,33 +2,13 @@
 include '../config.php';
 include '../classes.php';
 include '../display.php';
+include '../tags.php';
 
 ob_start("ob_gzhandler");
 
 ini_set('display_errors', 1);
 ini_set('html_errors', 0);
 ini_set('error_reporting', -1);
-
-class Functions
-{
-	static function split_tag( $tag )
-	{
-		preg_match( '/^(.*)=(.*)$/', $tag, $match );
-		return array( $match[1], $match[2] );
-	}
-
-	static function split_tags( array $tags )
-	{
-		$returnTags = array();
-
-		foreach ( $tags as $tag )
-		{
-			list( $name, $value ) = self::split_tag( $tag );
-			$returnTags[$name] = $value;
-		}
-		return $returnTags;
-	}
-}
 
 header('Content-type: text/plain');
 $m = new MongoClient( 'mongodb://localhost' );
@@ -59,10 +39,11 @@ foreach( $s as &$r )
 	$tags = Functions::split_tags( $r[TAGS] );
 
 	/* Find closest street */
-	$q = $c->find( [ LOC => [ '$near' => $r[LOC] ], TAGS => new MongoRegex('/^highway=(trunk|pedestrian|service|primary|secondary|tertiary|residential|unclassified)/' ) ] )->limit(1);
+	$query = [ LOC => [ '$near' => $r[LOC] ], TAGS => new MongoRegex('/^highway=(trunk|pedestrian|service|primary|secondary|tertiary|residential|unclassified)/' ) ];
+	$q = $c->find( $query )->limit(1);
 	$road = $q->getNext();
 	$roadTags = Functions::split_tags( $road[TAGS] );
-	$roadName = $roadTags['name'];
+	$roadName = array_key_exists( 'name', $roadTags ) ? $roadTags['name'] : "Unknown " . $roadTags['highway'];
 	$s[] = $road;
 
 	/* Find all roads that intersect with the $road */

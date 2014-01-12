@@ -14,14 +14,15 @@ else
 }
 
 /* Connect, empty the collection and create indexes */
-$m = new MongoClient( 'mongodb://localhost:27017/?w=1' );
-$collection = $m->selectCollection( DATABASE, $collection );
+$mCache = new MongoClient( 'mongodb://localhost:27017/?w=1' );
+$mData = new MongoClient( 'mongodb://xdebug.org:27017/?w=1' );
+$collection = $mData->selectCollection( DATABASE, $collection );
 $collection->drop();
 $collection->ensureIndex( array( TYPE => 1 ) );
 $collection->ensureIndex( array( LOC => '2dsphere' ) );
 $collection->ensureIndex( array( TAGS => 1 ) );
 
-$cache = $m->selectCollection( "cache_" . DATABASE, 'nodecache' );
+$cache = $mCache->selectCollection( "cache_" . DATABASE, 'nodecache' );
 $cache->drop();
 
 /* Parse the nodes */
