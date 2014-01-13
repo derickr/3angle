@@ -24,7 +24,7 @@ $res = $c->aggregate( array(
 		'maxDistance' => 1000,
 		'spherical' => true,
 		'query' => array( TAGS => 'amenity=post_box' ),
-		'limit' => 25,
+		'limit' => 40,
 	) ),
 	array( '$sort' => array( 'distance' => 1 ) ),
 ) );

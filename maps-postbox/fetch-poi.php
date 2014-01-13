@@ -155,23 +155,27 @@ foreach( $s as &$r )
 	/* Add name tag */
 	if ( ! $intersectingRoad )
 	{
-		$r[TAGS][] = "name={$pbref}<br/>On $roadName";
+		$desc = "On $roadName";
 	}
 	else
 	{
 		if ( $intersectingRoad['distance'] < 20 )
 		{
-			$r[TAGS][] = "name={$pbref}<br/>On $roadName, on the corner with $intersectRoadName";
+			$desc = "On $roadName, on the corner with $intersectRoadName";
 		}
 		else if ( $intersectingRoad['distance'] > 50 && $secondIntersectingRoad )
 		{
-			$r[TAGS][] = "name={$pbref}<br/>On $roadName, between $intersectRoadName and $secondIntersectRoadName";
+			$desc = "On $roadName, between $intersectRoadName and $secondIntersectRoadName";
 		}
 		else
 		{
-			$r[TAGS][] = "name={$pbref}<br/>On $roadName, near $intersectRoadName";
+			$desc = "On $roadName, near $intersectRoadName";
 		}
 	}
+
+	$r['desc'] = $desc;
+	$r['ref'] = $pbref;
+	$r[TAGS][] = "name={$pbref}<br/>{$desc}";
 
 	$r['score'] = 0;
 	if ( array_key_exists( 'meta', $r ) )
@@ -183,7 +187,16 @@ foreach( $s as &$r )
 	}
 }
 
-$rets = format_response( $s, false );
+if ( array_key_exists( 'simple', $_GET ) )
+{
+	unset( $r['ts'], $r['m'], $r['ty'], $r['_id'] );
+	$r['l'] = $r['l']['coordinates'];
+	echo json_encode( $r, JSON_PRETTY_PRINT );
+}
+else
+{
+	$rets = format_response( $s, false );
 
-echo json_encode( $rets, JSON_PRETTY_PRINT );
+	echo json_encode( $rets, JSON_PRETTY_PRINT );
+}
 ?>
