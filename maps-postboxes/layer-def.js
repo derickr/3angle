@@ -30,6 +30,12 @@ var postboxesLayerOptions = {
 			}
 		}
 
+		if (feature.properties.score) {
+			if (feature.properties.score > 99) {
+				style = { color: '#0f0', fillColor: '#0f0', fillOpacity: 0.9 };
+			}
+		}
+
 		if (style) {
 			layer.setStyle( style );
 		}

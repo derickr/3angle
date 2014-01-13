@@ -23,7 +23,7 @@ $res = $c->aggregate( array(
 		'distanceMultiplier' => 1,
 		'maxDistance' => 5000,
 		'spherical' => true,
-		'query' => array( TAGS => 'amenity=post_box' ),
+		'query' => array( TAGS => 'amenity=post_box', 'meta.visited' => [ '$ne' => true ] ),
 		'limit' => 1,
 	)
 ) );
@@ -170,6 +170,15 @@ foreach( $s as &$r )
 		else
 		{
 			$r[TAGS][] = "name={$pbref}<br/>On $roadName, near $intersectRoadName";
+		}
+	}
+
+	$r['score'] = 0;
+	if ( array_key_exists( 'meta', $r ) )
+	{
+		if ( array_key_exists( 'visited', $r['meta'] ) )
+		{
+			$r['score'] = 100;
 		}
 	}
 }

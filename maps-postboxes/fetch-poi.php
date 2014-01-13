@@ -24,8 +24,9 @@ $res = $c->aggregate( array(
 		'maxDistance' => 1000,
 		'spherical' => true,
 		'query' => array( TAGS => 'amenity=post_box' ),
-		'limit' => 100,
+		'limit' => 25,
 	) ),
+	array( '$sort' => array( 'distance' => 1 ) ),
 ) );
 
 $s = array();
@@ -34,7 +35,9 @@ if ( array_key_exists( 'result', $res ) )
 	$s = $res['result'];
 }
 
-foreach( $s as &$r )
+$skipFirstNotFound = true;
+
+foreach( $s as $key => $r )
 {
 	$tags = Functions::split_tags( $r[TAGS] );
 
@@ -48,15 +51,22 @@ foreach( $s as &$r )
 		$pbref = '???';
 	}
 
+	$s[$key]['score'] = 0;
 	if ( array_key_exists( 'meta', $r ) )
 	{
 		if ( array_key_exists( 'visited', $r['meta'] ) )
 		{
-			$pbref .= ' visited';
+			$s[$key]['score'] = 100;
 		}
 	}
 
-	$r[TAGS][] = "name={$pbref}";
+	$s[$key][TAGS][] = "name={$pbref}";
+
+	if ( $s[$key]['score'] == 0 && $skipFirstNotFound )
+	{
+		$skipFirstNotFound = false;
+		unset( $s[$key] );
+	}
 }
 
 $rets = format_response( $s, false );
