@@ -23,7 +23,8 @@ $res = $c->aggregate( array(
 		'distanceMultiplier' => 1,
 		'maxDistance' => 5000,
 		'spherical' => true,
-		'query' => array( TAGS => 'amenity=post_box', 'meta.visited' => [ '$ne' => true ] ),
+//		'query' => array( TAGS => 'amenity=post_box', 'meta.visited' => [ '$ne' => true ] ),
+		'query' => array( TAGS => 'amenity=post_box' ),
 		'limit' => 1,
 	)
 ) );
