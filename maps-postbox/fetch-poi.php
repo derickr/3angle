@@ -175,6 +175,7 @@ foreach( $s as &$r )
 
 	$r['desc'] = $desc;
 	$r['ref'] = $pbref;
+	$r['distance'] = (int) $r['distance'];
 	$r[TAGS][] = "name={$pbref}<br/>{$desc}";
 
 	$r['score'] = 0;
