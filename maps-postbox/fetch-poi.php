@@ -41,8 +41,7 @@ foreach( $s as &$r )
 
 	/* Find closest street */
 	$query = [ LOC => [ '$near' => $r[LOC] ], TAGS => new MongoRegex('/^highway=(trunk|pedestrian|service|primary|secondary|tertiary|residential|unclassified)/' ) ];
-	$q = $c->find( $query )->limit(1);
-	$road = $q->getNext();
+	$road = $c->findOne( $query );
 	$roadTags = Functions::split_tags( $road[TAGS] );
 	$roadName = array_key_exists( 'name', $roadTags ) ? $roadTags['name'] : "Unknown " . $roadTags['highway'];
 	$s[] = $road;
@@ -53,6 +52,7 @@ foreach( $s as &$r )
 		TAGS => new MongoRegex('/^highway=(trunk|pedestrian|service|primary|secondary|tertiary|residential|unclassified)/' ),
 		'_id' => [ '$ne' => $road['_id'] ],
 	] );
+
 	$intersectingWays = array();
 	foreach ( $q as $crossRoad )
 	{
@@ -72,7 +72,7 @@ foreach( $s as &$r )
 			'maxDistance' => 5000,
 			'spherical' => true,
 			'query' => array( '_id' => [ '$in' => $intersectingWays ], TAGS => [ '$ne' => "name={$roadName}" ] ),
-			'limit' => 5,
+			'limit' => 1,
 		)
 	) );
 
@@ -96,51 +96,6 @@ foreach( $s as &$r )
 			$intersectRoadName = "???";
 		}
 		$s[] = $intersectingRoad;
-
-		$results = count( $res['result'] );
-		$secondIntersectingRoad = false;
-
-		if ( $results > 1 )
-		{
-			$i = 0;
-			do {
-				$i++;
-
-				/* Second cross road, but we don't really want that if this, and
-				 * the first one intersect as well */
-				$secondIntersectingRoad = $res['result'][$i];
-
-				$secondIntersectRes = $c->findOne( [
-					LOC => [ '$geoIntersects' => [ '$geometry' => $intersectingRoad[LOC] ] ],
-					'_id' => $secondIntersectingRoad['_id'],
-				] );
-			}
-			while ( $secondIntersectRes && ($i < $results - 1) );
-
-			if ( array_key_exists( 'name', $roadTags ) )
-			{
-				$secondIntersectRoadName = $roadTags['name'];
-			}
-			else if ( array_key_exists( 'ref', $roadTags ) )
-			{
-				$secondIntersectRoadName = $roadTags['ref'];
-			}
-			else
-			{
-				$secondIntersectRoadName = "???";
-			}
-
-			if ( $secondIntersectRoadName != $intersectRoadName )
-			{
-				$secondIntersectingRoad = $res['result'][$i];
-				$roadTags = Functions::split_tags( $secondIntersectingRoad[TAGS] );
-				$s[] = $secondIntersectingRoad;
-			}
-			else
-			{
-				$secondIntersectingRoad = false;
-			}
-		}
 	}
 
 	/* If there is a ref, use it, otherwise set ??? */
@@ -163,10 +118,6 @@ foreach( $s as &$r )
 		if ( $intersectingRoad['distance'] < 20 )
 		{
 			$desc = "On $roadName, on the corner with $intersectRoadName";
-		}
-		else if ( $intersectingRoad['distance'] > 50 && $secondIntersectingRoad )
-		{
-			$desc = "On $roadName, between $intersectRoadName and $secondIntersectRoadName";
 		}
 		else
 		{

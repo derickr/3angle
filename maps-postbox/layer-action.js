@@ -23,7 +23,7 @@ if (map.hasLayer( postboxLayer )) {
 			if (point) {
 				m = L.marker(point, {icon: myIcon}).addTo(postboxLayer);
 			}
-//			postboxLayer.addLayer(new L.CircleMarker(center, { color: '#00f', radius: 3, fillOpacity: 1 } ) );
+			postboxLayer.addLayer(new L.CircleMarker(center, { color: '#f00', radius: 3, fillOpacity: 1 } ) );
 		} );
 	});
 }
