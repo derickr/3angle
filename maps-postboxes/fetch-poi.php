@@ -35,7 +35,7 @@ if ( array_key_exists( 'result', $res ) )
 	$s = $res['result'];
 }
 
-$skipFirstNotFound = true;
+$skipFirstNotFound = false;
 
 foreach( $s as $key => $r )
 {
@@ -55,6 +55,10 @@ foreach( $s as $key => $r )
 	if ( array_key_exists( 'meta', $r ) )
 	{
 		if ( array_key_exists( 'visited', $r['meta'] ) )
+		{
+			$s[$key]['score'] = 50;
+		}
+		if ( array_key_exists( 'finished', $r['meta'] ) )
 		{
 			$s[$key]['score'] = 100;
 		}

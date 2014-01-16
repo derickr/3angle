@@ -23,7 +23,7 @@ $res = $c->aggregate( array(
 		'distanceMultiplier' => 1,
 		'maxDistance' => 5000,
 		'spherical' => true,
-//		'query' => array( TAGS => 'amenity=post_box', 'meta.visited' => [ '$ne' => true ] ),
+//		'query' => array( TAGS => 'amenity=post_box', 'meta.finished' => [ '$ne' => true ] ),
 		'query' => array( TAGS => 'amenity=post_box' ),
 		'limit' => 1,
 	)
@@ -134,6 +134,10 @@ foreach( $s as &$r )
 	if ( array_key_exists( 'meta', $r ) )
 	{
 		if ( array_key_exists( 'visited', $r['meta'] ) )
+		{
+			$r['score'] = 50;
+		}
+		if ( array_key_exists( 'finished', $r['meta'] ) )
 		{
 			$r['score'] = 100;
 		}
