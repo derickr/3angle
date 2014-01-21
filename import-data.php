@@ -16,6 +16,7 @@ else
 /* Connect, empty the collection and create indexes */
 $mCache = new MongoClient( 'mongodb://localhost:27017/?w=1' );
 $mData = new MongoClient( 'mongodb://xdebug.org:27017/?w=1' );
+//$mData = new MongoClient( 'mongodb://localhost:27017/?w=1' );
 $collection = $mData->selectCollection( DATABASE, $collection );
 $collection->drop();
 $collection->ensureIndex( array( TYPE => 1 ) );
@@ -33,6 +34,9 @@ $count = 0;
 $collection->remove( array( TYPE => 1 ), array( 'timeout' => 1800000 ) );
 $cacheItems = array();
 $collectionItems = array();
+
+$filter = '/^(amenity=post_box)|(highway=)/';
+$filter = false;
 
 echo "Importing nodes:\n";
 while ($z->name === 'node') {
@@ -52,7 +56,10 @@ while ($z->name === 'node') {
 	/* #2: Write the insert command here */
 	if ( array_key_exists( TAGS, $q ) )
 	{
-		$collectionItems[] = $q;
+		if ( !$filter || count( preg_grep( $filter, $q[TAGS] ) ) > 0 )
+		{
+			$collectionItems[] = $q;
+		}
 		if ( count( $collectionItems ) >= 10000 )
 		{
 			$collection->batchInsert( $collectionItems, array( 'continueOnError' => true ) );
@@ -123,14 +130,17 @@ while ($z->name === 'way') {
 			fetchLocations($collection, $q, $way, $locationCache );
 			parseNode($q, $way);
 
-			$qs[] = $q;
+			if ( !$filter || !is_array( $q[TAGS] ) || count( preg_grep( $filter, $q[TAGS] ) ) > 0 )
+			{
+				$qs[] = $q;
+			}
 		}
 
 		try
 		{
 			$collection->batchInsert( $qs, array( 'continueOnError' => 1 ) );
 		}
-		catch ( MongoCursorException $e )
+		catch ( MongoException $e )
 		{
 			echo "\n", $q['_id'], ': ', $e->getMessage(), "\n";
 		}
