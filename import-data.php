@@ -15,8 +15,8 @@ else
 
 /* Connect, empty the collection and create indexes */
 $mCache = new MongoClient( 'mongodb://localhost:27017/?w=1' );
-$mData = new MongoClient( 'mongodb://xdebug.org:27017/?w=1' );
-//$mData = new MongoClient( 'mongodb://localhost:27017/?w=1' );
+//$mData = new MongoClient( 'mongodb://xdebug.org:27017/?w=1' );
+$mData = new MongoClient( 'mongodb://localhost:27017/?w=1' );
 $collection = $mData->selectCollection( DATABASE, $collection );
 $collection->drop();
 $collection->ensureIndex( array( TYPE => 1 ) );
@@ -35,8 +35,7 @@ $collection->remove( array( TYPE => 1 ), array( 'timeout' => 1800000 ) );
 $cacheItems = array();
 $collectionItems = array();
 
-$filter = '/^(amenity=post_box)|(highway=)/';
-$filter = false;
+$filter = '/^(amenity=post_box)|(highway=)|(amenity=pub)|(amenity=bar)/';
 
 echo "Importing nodes:\n";
 while ($z->name === 'node') {
