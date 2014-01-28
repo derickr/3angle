@@ -128,6 +128,13 @@ foreach( $s as &$r )
 	$r['desc'] = $desc;
 	$r['ref'] = $pbref;
 	$r['distance'] = (int) $r['distance'];
+
+	$dir = initial_bearing( $center->getGeoJson(), $r[LOC] );
+
+	$windlabel = array ('N','NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW','SW', 'WSW', 'W', 'WNW', 'NW', 'NNW');
+	$label = $windlabel[ fmod((($dir + 11.25) / 22.5),16) ];
+
+	$r['direction'] = $dir;
 	$r[TAGS][] = "name={$pbref}<br/>{$desc}";
 
 	$r['score'] = 0;
@@ -146,8 +153,9 @@ foreach( $s as &$r )
 
 if ( array_key_exists( 'simple', $_GET ) )
 {
-	unset( $r['ts'], $r['m'], $r['ty'], $r['_id'] );
+	unset( $r['ts'], $r['m'], $r['ty'], $r['_id'], $r['direction'] );
 	$r['l'] = $r['l']['coordinates'];
+	$r['w'] = $label;
 	echo json_encode( $r, JSON_PRETTY_PRINT );
 }
 else

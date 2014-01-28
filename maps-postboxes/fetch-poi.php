@@ -63,6 +63,7 @@ foreach( $s as $key => $r )
 			$s[$key]['score'] = 100;
 		}
 	}
+	$s[$key]['direction'] = initial_bearing( $center->getGeoJson(), $r[LOC] );
 
 	$s[$key][TAGS][] = "name={$pbref}";
 

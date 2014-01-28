@@ -45,6 +45,10 @@ function format_response( $s, $showCheckIn )
 			{       
 				$ret['properties']['name'] .= "<br/>\n(". sprintf('%d m', $o['distance']) . ')';
 			}
+			if ( isset( $o['direction'] ) )
+			{
+				$ret['properties']['name'] .= sprintf("<br/> <small>%d°</small>", ( $o['direction'] + 360 ) % 360);
+			}
 			$ret['properties']['classes'] = join( ' ', $classes );
 			$ret['properties']['popupContent'] = "<b>{$name}</b>" . $content;
 
