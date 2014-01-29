@@ -129,12 +129,11 @@ foreach( $s as &$r )
 	$r['ref'] = $pbref;
 	$r['distance'] = (int) $r['distance'];
 
-	$dir = initial_bearing( $center->getGeoJson(), $r[LOC] );
-
+	$dir = ( initial_bearing( $center->getGeoJson(), $r[LOC] ) + 360 ) % 360;
 	$windlabel = array ('N','NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW','SW', 'WSW', 'W', 'WNW', 'NW', 'NNW');
-	$label = $windlabel[ fmod((($dir + 11.25) / 22.5),16) ];
-
+	$r['dirLabel'] = $windlabel[ fmod( ( ( $dir + 11.25 ) / 22.5), 16 ) ];
 	$r['direction'] = $dir;
+
 	$r[TAGS][] = "name={$pbref}<br/>{$desc}";
 
 	$r['score'] = 0;

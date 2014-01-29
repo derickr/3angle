@@ -63,7 +63,6 @@ foreach( $s as $key => $r )
 			$s[$key]['score'] = 100;
 		}
 	}
-	$s[$key]['direction'] = initial_bearing( $center->getGeoJson(), $r[LOC] );
 
 	$s[$key][TAGS][] = "name={$pbref}";
 
@@ -72,6 +71,8 @@ foreach( $s as $key => $r )
 		$skipFirstNotFound = false;
 		unset( $s[$key] );
 	}
+
+	unset( $s[$key]['distance'] );
 }
 
 $rets = format_response( $s, false );
