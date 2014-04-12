@@ -31,7 +31,7 @@ $z = new XMLReader();
 $z->open($file);
 while ($z->read() && $z->name !== 'node' );
 $count = 0;
-$collection->remove( array( TYPE => 1 ), array( 'timeout' => 1800000 ) );
+$collection->remove( array( TYPE => 1 ), array( 'wTimeoutMS' => 1800000 ) );
 $cacheItems = array();
 $collectionItems = array();
 
