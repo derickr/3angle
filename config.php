@@ -28,9 +28,13 @@ $layers = [
 		'directory' => 'maps-4sq',
 		'layerName' => 'foursquare',
 	],
-	'Great Circle' => [
+	'Great Circle Box' => [
 		'directory' => 'maps-great-circle',
 		'layerName' => 'gc',
+	],
+	'Great Circle Line' => [
+		'directory' => 'maps-great-circle-line',
+		'layerName' => 'gcl',
 	],
 	'Nearest Postbox' => [
 		'directory' => 'maps-postbox',
