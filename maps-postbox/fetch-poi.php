@@ -54,6 +54,7 @@ foreach( $s as &$r )
 			$pbref = '???';
 		}
 		$r[TAGS][] = "name={$pbref}<br/>{$r['desc']}";
+		$r['ref'] = $pbref;
 	}
 
 	$r['distance'] = (int) $r['distance'];
@@ -67,7 +68,7 @@ if ( array_key_exists( 'simple', $_GET ) )
 {
 	unset( $r['ts'], $r['m'], $r['ty'], $r['_id'], $r['direction'] );
 	$r['l'] = $r['l']['coordinates'];
-	$r['w'] = $label;
+	$r['w'] = $r['dirLabel'];
 	echo json_encode( $r, JSON_PRETTY_PRINT );
 }
 else
