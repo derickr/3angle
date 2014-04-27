@@ -94,18 +94,5 @@ function createDescription( MongoCollection $c, &$r )
 
 	$r[TAGS][] = "name={$pbref}<br/>{$desc}";
 
-	$r['score'] = 0;
-	if ( array_key_exists( 'meta', $r ) )
-	{
-		if ( array_key_exists( 'visited', $r['meta'] ) )
-		{
-			$r['score'] = 50;
-		}
-		if ( array_key_exists( 'finished', $r['meta'] ) )
-		{
-			$r['score'] = 100;
-		}
-	}
-
 	return $desc;
 }

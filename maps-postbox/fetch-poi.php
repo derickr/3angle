@@ -57,6 +57,19 @@ foreach( $s as &$r )
 		$r['ref'] = $pbref;
 	}
 
+	$r['score'] = 0;
+	if ( array_key_exists( 'meta', $r ) )
+	{
+		if ( array_key_exists( 'visited', $r['meta'] ) )
+		{
+			$r['score'] = 50;
+		}
+		if ( array_key_exists( 'finished', $r['meta'] ) )
+		{
+			$r['score'] = 100;
+		}
+	}
+
 	$r['distance'] = (int) $r['distance'];
 	$dir = ( initial_bearing( $center->getGeoJson(), $r[LOC] ) + 360 ) % 360;
 	$windlabel = array ('N','NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW','SW', 'WSW', 'W', 'WNW', 'NW', 'NNW');
