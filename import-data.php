@@ -1,22 +1,28 @@
 <?php
 include 'config.php';
 include 'classes.php';
+	
+$collection = COLLECTION;
+$useCache = false;
 
 /* The file to parse will be on the command line */
-$file = $argv[1];
-if ( $argc == 3 )
+$dsn = $argv[1];
+$file = $argv[2];
+if ( $argc >= 5 )
 {
-	$collection = $argv[2];
+	if ( $argc[4] == 'usecache' )
+	{
+		$useCache = true;
+	}
 }
-else
+if ( $argc >= 4 )
 {
-	$collection = COLLECTION;
+	$collection = $argv[3];
 }
 
 /* Connect, empty the collection and create indexes */
 $mCache = new MongoClient( 'mongodb://localhost:27017/?w=1' );
-//$mData = new MongoClient( 'mongodb://xdebug.org:27017/?w=1' );
-$mData = new MongoClient( 'mongodb://localhost:27017/?w=1' );
+$mData = new MongoClient( $dsn );
 $collection = $mData->selectCollection( DATABASE, $collection );
 $collection->drop();
 $collection->ensureIndex( array( TYPE => 1 ) );
@@ -24,7 +30,10 @@ $collection->ensureIndex( array( LOC => '2dsphere' ) );
 $collection->ensureIndex( array( TAGS => 1 ) );
 
 $cache = $mCache->selectCollection( "cache_" . DATABASE, 'nodecache' );
-$cache->drop();
+if ( !$useCache )
+{
+	$cache->drop();
+}
 
 /* Parse the nodes */
 $z = new XMLReader();
@@ -66,11 +75,14 @@ while ($z->name === 'node') {
 		}
 	}
 
-	$cacheItems[] = array( '_id' => (int) $node['id'], LOC => array( (float) $node['lon'], (float) $node['lat'] ) );
-	if ( count( $cacheItems ) >= 10000 )
+	if ( !$useCache )
 	{
-		$cache->batchInsert( $cacheItems, array( 'continueOnError' => true ) );
-		$cacheItems = array();
+		$cacheItems[] = array( '_id' => (int) $node['id'], LOC => array( (float) $node['lon'], (float) $node['lat'] ) );
+		if ( count( $cacheItems ) >= 10000 )
+		{
+			$cache->batchInsert( $cacheItems, array( 'continueOnError' => true ) );
+			$cacheItems = array();
+		}
 	}
 
 	$z->next('node');
@@ -87,7 +99,7 @@ if ( count( $collectionItems ) )
 {
 	$collection->batchInsert( $collectionItems, array( 'continueOnError' => true ) );
 }
-if ( count( $cacheItems ) )
+if ( !$useCache && count( $cacheItems ) )
 {
 	$cache->batchInsert( $cacheItems, array( 'continueOnError' => true ) );
 }
@@ -129,7 +141,7 @@ while ($z->name === 'way') {
 			fetchLocations($collection, $q, $way, $locationCache );
 			parseNode($q, $way);
 
-			if ( !$filter || !is_array( $q[TAGS] ) || count( preg_grep( $filter, $q[TAGS] ) ) > 0 )
+			if ( !$filter || !array_key_exists( TAGS, $q ) || !is_array( $q[TAGS] ) || count( preg_grep( $filter, $q[TAGS] ) ) > 0 )
 			{
 				$qs[] = $q;
 			}
