@@ -4,6 +4,7 @@ include 'config.php';
 $lat = 51.508;
 $lon = -0.128;
 $zoom = 10;
+$maxZoom = 19;
 $defaultLayers = array();
 
 if ( isset( $_GET['lat'] ) )
@@ -21,6 +22,12 @@ if ( isset( $_GET['zoom'] ) )
 if ( isset( $_GET['l'] ) )
 {
 	$defaultLayers = explode( ',', $_GET['l'] );
+}
+$mapUrl = 'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+if ( isset( $_GET['kb'] ) )
+{
+	$maxZoom = 4;
+	$mapUrl = 'http://127.0.1.4/images/kerbin_project/{z}/{x}/{y}.png';
 }
 ?>
 <!DOCTYPE html>
@@ -101,13 +108,11 @@ foreach ( $layers as $layerName => $info )
 		var map = new L.Map('map');
 		var disabledRefetch;
 
-		var OpenStreetMapUrl = 'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+		var OpenStreetMapUrl = '<?php echo $mapUrl; ?>',
 			OpenStreetMapAttribution = 'Map data &copy; 2013 OpenStreetMap contributors',
-			OpenStreetMap = new L.TileLayer(OpenStreetMapUrl, {maxZoom: 19, attribution: OpenStreetMapAttribution, opacity: 0.7});
+			OpenStreetMap = new L.TileLayer(OpenStreetMapUrl, {maxZoom: <?php echo $maxZoom; ?>, attribution: OpenStreetMapAttribution, opacity: 0.7, tms: false});
 
 		map.setView(new L.LatLng(<?php echo $lat; ?>, <?php echo $lon; ?>), <?php echo $zoom; ?>).addLayer(OpenStreetMap); 
-
-		var overlayer = new L.TileLayer('http://3angle/density.php?z={z}&x={x}&y={y}', {minZoom: 10, maxZoom: 14, opacity: 0.5});
 
 <?php
 foreach ( $layers as $layerName => $info )

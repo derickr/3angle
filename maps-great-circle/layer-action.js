@@ -2,7 +2,11 @@
 $s = '';
 if (array_key_exists( 'gc_segments', $_GET ) ) {
 	$segments = (int) $_GET['gc_segments'];
-	$s = " + '&segments={$segments}'";
+	$s .= " + '&segments={$segments}'";
+}
+if (array_key_exists( 's', $_GET ) ) {
+	$size = (float) $_GET['s'];
+	$s .= " + '&size={$size}'";
 }
 ?>
 if (map.hasLayer( gcLayer )) {

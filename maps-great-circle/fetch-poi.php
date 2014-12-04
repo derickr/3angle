@@ -9,6 +9,13 @@ header('Content-type: text/plain');
 
 ini_set('html_errors', 0);
 
+$size = 0.95;
+
+if ( isset( $_GET['size'] ) )
+{
+	$size = (float) $_GET['size'];
+}
+
 $n = (float) $_GET['n'];
 $e = (float) $_GET['e'];
 $s = (float) $_GET['s'];
@@ -21,10 +28,10 @@ $mEW = ($e+$w)/2;
 //var_dump( $mNS, $mEW );
 //echo "\n";
 
-$n = $mNS + 0.95 * ($mNS - $s);
-$s = $mNS - 0.95 * ($mNS - $s);
-$w = $mEW + 0.95 * ($mEW - $e);
-$e = $mEW - 0.95 * ($mEW - $e);
+$n = $mNS + $size * ($mNS - $s);
+$s = $mNS - $size * ($mNS - $s);
+$w = $mEW + $size * ($mEW - $e);
+$e = $mEW - $size * ($mEW - $e);
 //var_dump( $n, $s, $e, $w );
 
 $rets = [];
