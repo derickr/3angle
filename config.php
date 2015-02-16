@@ -36,6 +36,10 @@ $layers = [
 		'directory' => 'maps-great-circle-line',
 		'layerName' => 'gcl',
 	],
+	'Great Circle Radius' => [
+		'directory' => 'maps-great-circle-radius',
+		'layerName' => 'gcr',
+	],
 	'Nearest Postbox' => [
 		'directory' => 'maps-postbox',
 		'layerName' => 'postbox',
