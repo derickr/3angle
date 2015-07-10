@@ -45,6 +45,7 @@ $cacheItems = array();
 $collectionItems = array();
 
 $filter = '/^(amenity=post_box)|(highway=)|(amenity=pub)|(amenity=bar)/';
+$filter = '/^(amenity=)|(shop=)|(tourism=)/';
 
 echo "Importing nodes:\n";
 while ($z->name === 'node') {
