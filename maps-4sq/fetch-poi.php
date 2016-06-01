@@ -9,8 +9,8 @@ ini_set('display_errors', 1);
 ini_set('error_reporting', -1);
 
 header('Content-type: text/plain');
-$m = new MongoClient( 'mongodb://localhost' );
-$d = $m->selectDb( DATABASE );
+$m = new \MongoDB\Driver\Manager( 'mongodb://localhost' );
+
 $segments = array_key_exists('segments', $_GET) ? (int) $_GET['segments'] : 1;
 
 $polygon = GeoJSONPolygon::createFromBounds(
@@ -21,7 +21,6 @@ $polygon = GeoJSONPolygon::createFromBounds(
 	$segments
 );
 
-$c = $d->selectCollection( 'foursquare' );
 $query = array(
 	LOC => array(
 		'$geoWithin' => array(
@@ -29,7 +28,8 @@ $query = array(
 		),
 	),
 );
-$s = $c->find( $query )->limit( 8000 );
+$s = $m->executeQuery( DATABASE . '.foursquare', new \MongoDB\Driver\Query( $query, [ 'limit' => 25000 ] ) );
+$s->setTypemap( [ 'document' => 'array', 'root' => 'array' ] );
 
 $rets = format_response( $s, false );
 

@@ -9,8 +9,8 @@ ini_set('display_errors', 1);
 ini_set('error_reporting', -1);
 
 header('Content-type: text/plain');
-$m = new MongoClient( 'mongodb://localhost' );
-$d = $m->selectDb( DATABASE );
+$m = new \MongoDB\Driver\Manager( 'mongodb://localhost' );
+
 $segments = array_key_exists('segments', $_GET) ? (int) $_GET['segments'] : 1;
 $set = array_key_exists('set', $_GET) ? (string) $_GET['set'] : false;
 
@@ -22,7 +22,6 @@ $polygon = GeoJSONPolygon::createFromBounds(
 	$segments
 );
 
-$c = $d->selectCollection( 'flickr' );
 $query = array(
 	LOC => array(
 		'$geoWithin' => array(
@@ -33,7 +32,8 @@ $query = array(
 if ($set) {
 	$query['sets'] = $set;
 }
-$s = $c->find( $query )->limit( 8000 );
+$s = $m->executeQuery( DATABASE . '.flickr', new \MongoDB\Driver\Query( $query, [ 'limit' => 25000 ] ) );
+$s->setTypemap( [ 'document' => 'array', 'root' => 'array' ] );
 
 $rets = format_response( $s, false );
 

@@ -9,9 +9,12 @@ ini_set('display_errors', 1);
 ini_set('error_reporting', -1);
 
 header('Content-type: text/plain');
-$m = new MongoClient( 'mongodb://localhost' );
-$d = $m->selectDb( DATABASE );
-$sets = $d->flickr->distinct( "sets" );
+$m = new \MongoDB\Driver\Manager( 'mongodb://localhost' );
+
+$cmd = new \MongoDB\Driver\Command( [ 'distinct' => 'flickr', 'key' => 'sets' ] );
+$r = iterator_to_array( $m->executeCommand( DATABASE, $cmd ) );
+$sets = $r[0]->values;
+
 natcasesort( $sets ); 
 $sets = array( "all" ) + array_values( $sets );
 
