@@ -1,4 +1,5 @@
 <?php
+require '../vendor/autoload.php';
 include '../config.php';
 include '../classes.php';
 include '../display.php';
@@ -11,8 +12,8 @@ ini_set('html_errors', 0);
 ini_set('error_reporting', -1);
 
 header('Content-type: text/plain');
-$m = new MongoClient( 'mongodb://localhost' );
-$d = $m->selectDb( DATABASE );
+$m = new \MongoDB\Client( 'mongodb://localhost:27016' );
+$d = $m->selectDatabase( DATABASE );
 $c = $d->selectCollection( COLLECTION );
 $center = new GeoJSONPoint( (float) $_GET['lon'], (float) $_GET['lat'] );
 

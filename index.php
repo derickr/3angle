@@ -95,6 +95,7 @@ foreach ( $layers as $layerName => $info )
 	<script type="text/javascript" src="leaflet.js"></script>
 	<script type="text/javascript" src="jquery-1.7.2.min.js"></script>
 	<script type="text/javascript" src="Leaflet.markercluster/leaflet.markercluster.js"></script>
+	<script src='//api.tiles.mapbox.com/mapbox.js/plugins/leaflet-omnivore/v0.3.1/leaflet-omnivore.min.js'></script>
 
 	<script>
 		$.urlParam = function(name){
@@ -105,14 +106,16 @@ foreach ( $layers as $layerName => $info )
 			return false;
 		}
 
-		var map = new L.Map('map');
+		var map = new L.Map('map', { smoothZoom: true /*, zoomSnap: 0, zoomDelta: 0.2*/ } );
 		var disabledRefetch;
 
 		var OpenStreetMapUrl = '<?php echo $mapUrl; ?>',
-			OpenStreetMapAttribution = 'Map data &copy; 2013 OpenStreetMap contributors',
+			OpenStreetMapAttribution = 'Map data &copy; OpenStreetMap contributors',
 			OpenStreetMap = new L.TileLayer(OpenStreetMapUrl, {maxZoom: <?php echo $maxZoom; ?>, attribution: OpenStreetMapAttribution, opacity: 0.7, tms: false});
 
 		map.setView(new L.LatLng(<?php echo $lat; ?>, <?php echo $lon; ?>), <?php echo $zoom; ?>).addLayer(OpenStreetMap); 
+
+//		omnivore.kml("boundaries.kml").addTo(map);
 
 <?php
 foreach ( $layers as $layerName => $info )

@@ -9,7 +9,7 @@ ini_set('display_errors', 1);
 ini_set('error_reporting', -1);
 
 header('Content-type: text/plain');
-$m = new \MongoDB\Driver\Manager( 'mongodb://localhost' );
+$m = new \MongoDB\Driver\Manager( 'mongodb://localhost:27016' );
 
 $cmd = new \MongoDB\Driver\Command( [ 'distinct' => 'flickr', 'key' => 'sets' ] );
 $r = iterator_to_array( $m->executeCommand( DATABASE, $cmd ) );

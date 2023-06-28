@@ -1,4 +1,5 @@
 <?php
+require '../vendor/autoload.php';
 include '../config.php';
 include '../classes.php';
 include '../display.php';
@@ -10,9 +11,17 @@ ini_set('display_errors', 1);
 ini_set('error_reporting', -1);
 ini_set('xdebug.var_display_max_depth', 8);
 
+if ( !array_key_exists( 'lon', $_GET ) )
+{
+	$_GET['lon'] = -0.09;
+	$_GET['lat'] = 51.51;
+}
+
+$limit = array_key_exists( 'limit', $_GET ) ? $_GET['limit'] : 0.001;
+
 header('Content-type: text/plain');
-$m = new MongoClient( 'mongodb://localhost' );
-$d = $m->selectDb( DATABASE );
+$m = new \MongoDB\Client( 'mongodb://localhost:27016' );
+$d = $m->selectDatabase( DATABASE );
 $c = $d->selectCollection( COLLECTION );
 $center = new GeoJSONPoint( (float) $_GET['lon'], (float) $_GET['lat'] );
 
@@ -43,7 +52,7 @@ if (!$s)
 	);
 
 	// this finds the first TZID
-	$s = $tzc->aggregate(
+	$s = $tzc->aggregate( [
 			array( '$geoNear' => array(
 				'near' => $center->getGeoJSON(),
 				'distanceField' => 'd',
@@ -57,17 +66,19 @@ if (!$s)
 			) ),
 			array( '$sort' => array( 'd' => 1 ) ),
 			array( '$limit' => 1 )
-	);
-	if (isset( $s['result'][0] ) )
+	], [
+		'typemap' => [ 'root' => 'array', 'document' => 'array' ]
+	] );
+	$s = iterator_to_array( $s );
+	if (isset( $s[0] ) )
 	{
-		$s = $s['result'][0];
+		$s = $s[0];
 	}
 	else
 	{
 		$s = false;
 	}
 }
-
 $tag = false;
 
 if ( isset( $s[TAGS] ) )
@@ -80,7 +91,7 @@ if ( $tag )
 	$query = array(
 		TAGS => $tag
 	);
-	$s = $tzc->find( $query );
+	$s = $tzc->find( $query, [ 'typeMap' => [ 'root' => 'array', 'document' => 'array' ] ] );
 }
 else
 {
@@ -125,17 +136,15 @@ foreach ( $s as $record )
 		$newPolygonRounds = [];
 		$newRecord = $record;
 
-		$limit = 0.01;
-
 		foreach ( $record[LOC]['coordinates'] as $idx => $round )
 		{
 			if ( function_exists( 'rdp_simplify' ) )
 			{
-				$newPoints = rdp_simplify( $record[LOC]['coordinates'][$idx], $limit );
+				$newPoints = rdp_simplify( (array) $record[LOC]['coordinates'][$idx], $limit );
 			}
 			else
 			{
-				$newPoints = RDP::Simplify( $record[LOC]['coordinates'][$idx], $limit );
+				$newPoints = RDP::Simplify( (array) $record[LOC]['coordinates'][$idx], $limit );
 			}
 			$newRecord[LOC]['coordinates'][$idx] = $newPoints;
 		}

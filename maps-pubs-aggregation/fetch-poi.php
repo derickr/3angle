@@ -1,4 +1,5 @@
 <?php
+require '../vendor/autoload.php';
 include '../config.php';
 include '../classes.php';
 include '../display.php';
@@ -9,15 +10,12 @@ ini_set('display_errors', 1);
 ini_set('error_reporting', -1);
 
 header('Content-type: text/plain');
-$m = new MongoClient( 'mongodb://localhost' );
-$d = $m->selectDb( DATABASE );
+$m = new \MongoDB\Client( 'mongodb://localhost:27016' );
+$d = $m->selectDatabase( DATABASE );
 $c = $d->selectCollection( COLLECTION );
 $center = new GeoJSONPoint( (float) $_GET['lon'], (float) $_GET['lat'] );
 
-//db.poiConcat.aggregate( { $geoNear: { near: [ -0.153191, 51.53419911 ],
-//		distanceField : 'distance', distanceMultiplier: 6371, maxDistance:
-//		5000, spherical: true, num: 10, query: { ts: 'amenity=pub' } } } );
-$res = $c->aggregate( array(
+$res = $c->aggregate( [ array(
 	'$geoNear' => array(
 		'near' => $center->getGeoJson(),
 		'distanceField' => 'distance',
@@ -30,15 +28,11 @@ $res = $c->aggregate( array(
 			array( TAGS => 'amenity=restaurant' )
 		) ),
 	)
-) );
+) ] );
 
-$s = array();
-if ( array_key_exists( 'result', $res ) )
-{
-	$s = $res['result'];
-}
+$res->setTypeMap( [ 'root' => 'Array', 'document' => 'Array' ] );
 
-$rets = format_response( $s, false );
+$rets = format_response( iterator_to_array( $res ), false );
 
 echo json_encode( $rets, JSON_PRETTY_PRINT );
 ?>

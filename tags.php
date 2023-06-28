@@ -3,7 +3,7 @@ class Functions
 {
 	static function split_tag( $tag )
 	{
-		preg_match( '/^(.*)=(.*)$/', $tag, $match );
+		preg_match( '/^(.*)=(.*)$/m', $tag, $match );
 		return array( $match[1], $match[2] );
 	}
 

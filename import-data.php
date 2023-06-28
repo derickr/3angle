@@ -21,7 +21,7 @@ if ( $argc >= 4 )
 }
 
 /* Connect, empty the collection and create indexes */
-$mCache = new MongoClient( 'mongodb://localhost:27017/?w=1' );
+$mCache = new MongoClient( 'mongodb://localhost:27016/?w=1' );
 $mData = new MongoClient( $dsn );
 $collection = $mData->selectCollection( DATABASE, $collection );
 $collection->drop();

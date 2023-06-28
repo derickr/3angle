@@ -2,10 +2,14 @@
 define( 'DATABASE', 'demo' );
 define( 'COLLECTION', 'poiConcat' );
 
+define( 'NOTESCACHECOLLECTION', 'notescache' );
+
 define( 'TYPE', 'ty' );
 define( 'LOC', 'l' );
 define( 'TAGS', 'ts' );
 define( 'META', 'm' );
+
+define( 'DESC_VERSION', 2 );
 
 $layers = [
 	'3angle' => [
@@ -43,6 +47,10 @@ $layers = [
 	'Nearest Postbox' => [
 		'directory' => 'maps-postbox',
 		'layerName' => 'postbox',
+	],
+	'OSM Notes' => [
+		'directory' => 'maps-osm-notes',
+		'layerName' => 'osmnotes',
 	],
 	'Postboxes' => [
 		'directory' => 'maps-postboxes',

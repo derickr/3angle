@@ -1,0 +1,2 @@
+if (map.hasLayer( timezonesLayer )) {
+}

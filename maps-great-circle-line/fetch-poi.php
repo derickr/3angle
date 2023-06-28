@@ -74,20 +74,34 @@ distance( $n, $e, $s, $e, $d );
 var_dump( $n, $e, $s, $e, $d );
 die();
 */
+
 define('SEGMENTS', 1);
-$step = 1 / (array_key_exists('segments', $_GET) ? (int) $_GET['segments'] : 1) - 0.00001;
 
-for ($j = 0; $j < SEGMENTS; $j++ )
+function doLine( &$rets, $lat1, $lon1, $lat2, $lon2 )
 {
-	$coordinates = [];
-	for ( $i = 0; $i < 1; $i += $step )
+	$step = 1 / (array_key_exists('segments', $_GET) ? (int) $_GET['segments'] : 1) - 0.00001;
+	for ($j = 0; $j < SEGMENTS; $j++ )
 	{
-		getPoint( $lat2, $lon1 + (($lon2-$lon1)/SEGMENTS*$j), $lat1, $lon1 + (($lon2-$lon1)/SEGMENTS*(1+$j)), $i, $lat, $lon );
+		$coordinates = [];
+		for ( $i = 0; $i < 1; $i += $step )
+		{
+			getPoint( $lat2, $lon1 + (($lon2-$lon1)/SEGMENTS*$j), $lat1, $lon1 + (($lon2-$lon1)/SEGMENTS*(1+$j)), $i, $lat, $lon );
 
-		$coordinates[] = [ rad2deg($lon), rad2deg($lat) ];
+			$coordinates[] = [ rad2deg($lon), rad2deg($lat) ];
+		}
+		$rets[] = [ 'l' => [ 'type' => 'LineString', 'coordinates' => $coordinates, ], ];
 	}
-	$rets[] = [ 'l' => [ 'type' => 'LineString', 'coordinates' => $coordinates, ], ];
 }
+/*
+doLine($rets, 8,  1, 8, 12);
+doLine($rets, 3,  1, 8,  1);
+doLine($rets, 3, 12, 8, 12);
+
+doLine($rets, 8.02, 6, 8.02, 7);
+doLine($rets, 8.02, 6, 9, 6);
+doLine($rets, 8.02, 7, 9, 7);
+*/
+doLine($rets, $lat1, $lon1, $lat2, $lon2);
 
 $rets = format_response( $rets, false );
 
